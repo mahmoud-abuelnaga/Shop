@@ -1,0 +1,25 @@
+<%- include('../includes/head.ejs') %>
+    </head>
+
+    <body>
+        <%- include('../includes/navigation.ejs') %>
+        <main>
+            <% if (orders.length == 0) { %>
+                <h1>Nothing there!</h1>
+            <% } %>
+            
+            <ul>
+                <% for (let order of orders) { %>
+                    <li>
+                        <h1>#<%= order._id %> (Total: $<%= order.totalPrice %>)</h1>
+                        <ul>
+                            <% for (let product of order.products) { %>
+                                <li><%= product.title %> (<%= product.quantity %>) ($<%= product.quantity * product.price %>)</li>
+                            <% } %>
+                        </ul>
+                    </li>
+                <% } %>
+            </ul>
+            
+        </main>
+        <%- include('../includes/end.ejs') %>

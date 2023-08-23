@@ -1,0 +1,28 @@
+<%- include('../includes/head.ejs') %>
+    <link rel="stylesheet" href="css/cart.css">
+</head>
+
+<body>
+    <%- include('../includes/navigation.ejs') %>
+    <main>
+        <% if (products.length > 0) { %>
+            <ul class="cart__item-list">
+                <% for (const product of products) { %>
+                    <li class="cart__item">
+                        <h1><%= product.title %></h1>
+                        <h2>Quantity: <%= product.quantity %> ($<%= product.price * product.quantity %>)</h2>
+                        <%- include('../includes/updateCartBtn.ejs', {product: product, btnText: 'Delete', action: 'delete'}) %>
+                    </li>
+                <% } %>
+            </ul>
+            <hr>
+            <div class="centered">
+                <form action="/create-order" method="post">
+                    <button  type="submit" class="btn">Place an Order</button>
+                </form>
+            </div>
+        <% } else { %>
+            <h1>No Products in Cart</h1>
+        <% } %>
+    </main>
+<%- include('../includes/end.ejs') %>
