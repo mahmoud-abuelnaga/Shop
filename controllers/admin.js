@@ -1,8 +1,7 @@
 // Core Modules
 
 // Models
-const Product = require('../models/product');
-const User = require('../models/user');
+const {Product} = require('../models/product');
 
 // Controllers
 const errorControllers = require('./error');
@@ -26,10 +25,10 @@ exports.postAddProduct = (req, res, next) => {
     const description = req.body.description;
 
     // Create a new product & save it to the database
-    const product = new Product(title, price, description, imageUrl, req.user._id);
+    const product = new Product({title, price, description, imageUrl, sellerId: req.user._id});
     product.save()
     .then(result => {
-        console.log(result);
+        // console.log(result);
         res.redirect('/admin/products')
     })
     .catch(err => {
@@ -39,7 +38,7 @@ exports.postAddProduct = (req, res, next) => {
 };
 
 exports.getProducts = (req, res, next) => {
-    Product.getAll()
+    Product.find()
     .then(products => {
         res.render('admin/products', {
             path: '/admin/products',
@@ -54,9 +53,8 @@ exports.getProducts = (req, res, next) => {
 };
 
 exports.getEditProduct = (req, res, next) => {
-    Product.getById(req.params.id)
+    Product.findById(req.params.id)
     .then(product => {
-        product = product[0];
         if (!product) {
             errorControllers.get404(req, res, next);
         } else {
@@ -72,14 +70,14 @@ exports.getEditProduct = (req, res, next) => {
 
 exports.postEditProduct = (req, res, next) => {
     const idToUpdate = req.params.id;
-    const product = {
+    const productData = {
         title: req.body.title,
         description: req.body.description,
         imageUrl: req.body.imageUrl,
-        price: req.body.price,
-    }
+        price: parseFloat(req.body.price),
+    };
 
-    Product.updateById(idToUpdate, product)
+    Product.updateOne({_id: idToUpdate}, productData)
     .then(result => {
         console.log('....Product Updated....');
         res.redirect('/admin/products');
@@ -92,14 +90,14 @@ exports.postEditProduct = (req, res, next) => {
 }
 
 exports.deleteProduct = (req, res, next) => {
-    Product.deleteById(req.params.id)
+    Product.deleteOne({_id: req.params.id})
     .then(result => {
-        // console.log('....Deleted Product from products collection....');
-        return User.removeFromAllCarts(req.params.id);
+        console.log('....Deleted Product from products collection....');
+        return Product.removeFromCarts(req.params.id);
     })
     .then(result => {
-        // console.log('....Deleted product form users cart....');
-        // console.log(result);
+        console.log('....Deleted product form users cart....');
+        console.log(result);
         res.redirect('/admin/products');
     })
     .catch(err => {

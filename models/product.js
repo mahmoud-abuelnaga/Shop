@@ -1,67 +1,33 @@
 // Utilties
-const {db} = require('../util/database');
-const productsCol = db.collection('products');
 
 
 // NPM Packages
-const {ObjectId} = require('mongodb');
+const mongoose = require('mongoose');
 
 // Models
+const User = require('./user');
 
+// Model Definition
+const ProductSchema = new mongoose.Schema({
+    title: String,
+    price: Number,
+    description: {
+        type: String,
+    },
+    imageUrl: String,
+    sellerId: {
+        type: mongoose.ObjectId,
+        ref: 'User',
+    },
+});
 
-class Product {
-    constructor(title, price, description, imageUrl, sellerId) {
-        this.title = title;
-        this.price = parseFloat(price);
-        this.description = description;
-        this.imageUrl = imageUrl;
-        this.sellerId = sellerId ? new ObjectId(sellerId):null;
-    }
-
-    async save() {
-        const result = await productsCol.insertOne(this);
-        return result;
-    }
-
-    static async getAll() {
-        const cursor = productsCol.find();
-        const products = await cursor.toArray();
-        cursor.close();
-        return products;
-    }
-
-    static async getById(...ids) {
-        ids = ids.map(id => {
-            try {
-                return new ObjectId(id);
-            } catch (err) {
-                // Nothing
-            }
-        });
-        const cursor = productsCol.find({_id: {$in: ids}});
-        const products = await cursor.toArray();  // Returns a Promise
-        cursor.close();
-        return products;
-    }
-
-    static async deleteById(...ids) {
-        ids = ids.map(id => {
-            try {
-                return new ObjectId(id);
-            } catch (err) {
-                // Nothing
-            }
-        });
-
-        const result = await productsCol.deleteMany({_id: {$in: ids}});
-        return result;
-    }
-
-    static async updateById(id, productData) {
-        const result = await productsCol.replaceOne({_id: new ObjectId(id)}, productData);
-        return result;
-    }
+ProductSchema.statics.removeFromCarts = async (productId) => {
+    const result = await mongoose.model('User').updateMany({}, {$pull: {cart: {productId}}});
+    return result;
 }
 
+const Product = mongoose.model('Product', ProductSchema);
 
-module.exports = Product;
+
+module.exports.Product = Product;
+module.exports.ProductSchema = ProductSchema;

@@ -1,12 +1,13 @@
 // Models
-const Product = require('../models/product');
+const {Product} = require('../models/product');
+const Order = require('../models/order');
 
 // Controllers
 const errorControllers = require('./error');
 
 
 exports.getProducts = (req, res, next) => {
-    Product.getAll()
+    Product.find()
     .then(products => {
         res.render('shop/product-list', {
             prods: products,
@@ -18,7 +19,7 @@ exports.getProducts = (req, res, next) => {
 };
 
 exports.getIndex = (req, res, next) => {
-    Product.getAll()
+    Product.find()
     .then(products => {
         res.render('shop/index', {
             prods: products,
@@ -29,16 +30,17 @@ exports.getIndex = (req, res, next) => {
 };
 
 exports.getProductDetails = (req, res, next) => {
-    const productId = req.params.id;
-    Product.getById(productId)
+    Product.findById(req.params.id)
     .then(product => {
-        product = product[0];
         if (product) {
             res.render('shop/product-detail', { pageTitle: product.title, product, path: '/products' });
         } else {
             errorControllers.get404(req, res, next);
         }
         
+    })
+    .catch(err => {
+        console.log(err);
     });
 }
 
@@ -65,7 +67,7 @@ exports.updateCart = (req, res, next) => {
     }
     
     promise.then(result => {
-        console.log(result);
+        // console.log(result);
         res.redirect('/cart');
     })
     .catch(err => {
@@ -88,9 +90,11 @@ exports.getOrders = (req, res, next) => {
     
 };
 
-exports.createOrder = (req, res, next) => {
+exports.createOrder = 
+(req, res, next) => {
     req.user.createOrder()
     .then(result => {
+        console.log(result);
         res.redirect('/orders');
     })
     .catch(err => {

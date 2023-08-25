@@ -8,7 +8,7 @@ const errorController = require('./controllers/error');
 const express = require('express');
 
 // Utilities
-const {client} = require('./util/database');
+const mongoose = require('mongoose');
 
 // Models
 const User = require('./models/user');
@@ -17,6 +17,10 @@ const User = require('./models/user');
 const adminRoutes = require('./routes/admin');
 const shopRoutes = require('./routes/shop');
 const errorRoutes = require('./routes/error');
+
+// Constants
+const DATABASE = 'shop' 
+const URI = `mongodb+srv://mahmoud:${process.env.mongoDB_shop_pass}@cluster0.ffkdxbs.mongodb.net/${DATABASE}?retryWrites=true&w=majority`;
 
 // App
 const app = express();
@@ -29,42 +33,43 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Register the user
 app.use((req, res, next) => {
-    User.getByQuery({email: 'admin@admin.com'})
+    User.findById('64e6d11afa247a09690d5dec')
     .then(user => {
+        // console.log(user);
         req.user = user;
         next();
     })
     .catch(err => {
         console.log(err);
     });
-
 });
 app.use('/admin', adminRoutes);
 app.use(shopRoutes);
 app.use(errorRoutes);
 app.use(errorController.get404);
 
-// Create admin user if don't exist
 
+const main = async () => {
+    // Connect to the database
+    const result = await mongoose.connect(URI);
+    console.log('.....Connected to MongoDB database.....');
+    // console.log(result);
 
-const startServer = async () => {
-    try {
-        const admin = await User.getByQuery({
-            email: 'admin@admin.com',
-        });
-    } catch (err) {
-        const admin = new User('admin', 'admin@admin.com');
-        const result = await admin.save();
-        console.log('....Created admin user....');
-    }
-
-    try {
-        const cli = await client.connect();
-        console.log('.....Connected to MongoDB database.....');
-        app.listen(3000);
-    } catch (err) {
-        console.log(err);
-    }
+    // Create admin user if don't exist
+    const admin = await User.findOneAndUpdate({email: 'admin@admin.com'}, {
+        name: 'admin',
+    },
+    {
+        new: true,
+        upsert: true,
+    });
+    // console.log(admin);
+    
+    console.log('....Listening to requests....')
+    app.listen(3000);   // Listen on port 3000
 }
 
-startServer();
+main()
+.catch(err => {
+    console.log(err);
+});
