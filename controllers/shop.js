@@ -1,6 +1,5 @@
 // Models
 const {Product} = require('../models/product');
-const Order = require('../models/order');
 
 // Controllers
 const errorControllers = require('./error');
@@ -13,7 +12,7 @@ exports.getProducts = (req, res, next) => {
             prods: products,
             pageTitle: 'All Products',
             path: '/products',
-            loggedIn: req.loggedIn,
+            loggedIn: req.session.loggedIn,
         });
     });
     
@@ -35,7 +34,7 @@ exports.getProductDetails = (req, res, next) => {
     Product.findById(req.params.id)
     .then(product => {
         if (product) {
-            res.render('shop/product-detail', { pageTitle: product.title, product, path: '/products', loggedIn: req.loggedIn });
+            res.render('shop/product-detail', { pageTitle: product.title, product, path: '/products', loggedIn: req.session.loggedIn });
         } else {
             errorControllers.get404(req, res, next);
         }
@@ -54,7 +53,7 @@ exports.getCart = (req, res, next) => {
             products: cartProducts,
             pageTitle: 'Your Cart',
             path: '/cart',
-            loggedIn: req.loggedIn
+            loggedIn: req.session.loggedIn
         });
     })
     
@@ -85,7 +84,7 @@ exports.getOrders = (req, res, next) => {
             path: '/orders',
             pageTitle: 'Your Orders',
             orders,
-            loggedIn: req.loggedIn
+            loggedIn: req.session.loggedIn,
         });
     })
     .catch(err => {
@@ -94,8 +93,7 @@ exports.getOrders = (req, res, next) => {
     
 };
 
-exports.createOrder = 
-(req, res, next) => {
+exports.createOrder = (req, res, next) => {
     req.user.createOrder()
     .then(result => {
         console.log(result);
@@ -110,6 +108,7 @@ exports.createOrder =
 exports.getCheckout = (req, res, next) => {
     res.render('shop/checkout', {
         path: '/checkout',
-        pageTitle: 'Checkout'
+        pageTitle: 'Checkout',
+        loggedIn: req.session.loggedIn,
     });
 };

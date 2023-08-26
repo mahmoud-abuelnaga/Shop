@@ -3,13 +3,16 @@ const path = require('path');
 
 // Controllers
 const errorController = require('./controllers/error');
+const {isLoggedIn} = require('./controllers/auth')
 
 // NPM Modules
 const express = require('express');
 const session = require('express-session');
+const mongoose = require('mongoose');
+const MongoStore = require('connect-mongo');
 
 // Utilities
-const mongoose = require('mongoose');
+
 
 // Models
 const User = require('./models/user');
@@ -36,22 +39,28 @@ app.use(session({
     secret: 'mysecret',
     resave: false,  // Only resave the session when there is a change in the session information. If set to true, the session is save with every request from the user
     saveUninitialized: false,   //  This can be useful to prevent storing empty or unnecessary sessions for users who don't perform any actions that require session data.
+    store: MongoStore.create({  // Sets up the database collection used to store the sessions
+        mongoUrl: URI,
+    }),
 }));
 
-// Register the user
-app.use((req, res, next) => {
-    User.findById('64e6d11afa247a09690d5dec')
-    .then(user => {
-        // console.log(user);
-        req.user = user;
-        next();
-    })
-    .catch(err => {
-        console.log(err);
-    });
-});
 
-app.use('/admin', adminRoutes);
+// Routes
+app.use((req, res, next) => {
+    if (req.session.loggedIn) {
+        User.findById(req.session.userId)
+        .then(user => {
+            req.user = user;
+            next();
+        })
+        .catch(err => {
+            console.log(err);
+        });
+    } else {
+        next();
+    }
+});
+app.use('/admin', isLoggedIn, adminRoutes);
 app.use(shopRoutes);
 app.use(authRoutes);
 app.use(errorRoutes);

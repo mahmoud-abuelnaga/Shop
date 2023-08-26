@@ -6,7 +6,7 @@ const express = require('express');
 
 // Controllers
 const shopController = require('../controllers/shop');
-const errorController = require('../controllers/error');
+const {isLoggedIn} = require('../controllers/auth');
 
 // Routes
 const router = express.Router();
@@ -17,14 +17,14 @@ router.get('/products', shopController.getProducts);
 
 router.get('/products/:id', shopController.getProductDetails);  // Adding dynamic route
 
-router.get('/cart', shopController.getCart);
+router.get('/cart', isLoggedIn, shopController.getCart);
 
-router.post('/cart', shopController.updateCart)
+router.post('/cart', isLoggedIn, shopController.updateCart)
 
-router.get('/orders', shopController.getOrders);
+router.get('/orders', isLoggedIn, shopController.getOrders);
 
-router.post('/create-order', shopController.createOrder);
+router.post('/create-order', isLoggedIn, shopController.createOrder);
 
-router.get('/checkout', shopController.getCheckout);
+router.get('/checkout', isLoggedIn, shopController.getCheckout);
 
 module.exports = router;
