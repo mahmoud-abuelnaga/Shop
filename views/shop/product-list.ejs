@@ -23,7 +23,9 @@
                         </div>
                         <div class="card__actions">
                             <a href="/products/<%= product._id %>" class="btn">Details</a>
-                            <%- include('../includes/updateCartBtn.ejs', {product, action: 'add', btnText: 'Add To Cart'}) %>
+                            <% if (loggedIn) { %>
+                                <%- include('../includes/updateCartBtn.ejs', {product, action: 'add', btnText: 'Add To Cart'}) %>
+                            <% } %>
                         </div>
                     </article>
                 <% } %>

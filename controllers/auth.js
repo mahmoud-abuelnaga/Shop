@@ -15,7 +15,11 @@ module.exports.postLogin = (req, res, next) => {
         if (user) {
             req.session.loggedIn = true;    
             req.session.userId = user._id;
-            res.redirect('/');
+            req.session.save((err) => { // Make sure that the session is save before proceeding
+                console.log(err);
+                res.redirect('/');
+            });
+            
         } else {
             res.redirect('/404');
         }

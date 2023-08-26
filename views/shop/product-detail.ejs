@@ -11,8 +11,8 @@
         </div>
         <h2>$<%= product.price %></h2>
         <p><%= product.description %></p>
-
-        <%- include('../includes/updateCartBtn.ejs', {product, action: 'add', btnText: 'Add To Cart'}) %> <!--  You don't need to pass the product as you are not in a for loop, where the product is local. The product here is global -->
-
+        <% if (loggedIn) { %>
+            <%- include('../includes/updateCartBtn.ejs', {product, action: 'add', btnText: 'Add To Cart'}) %> <!--  You don't need to pass the product as you are not in a for loop, where the product is local. The product here is global -->
+        <% } %>
     </main>
 <%- include('../includes/end.ejs') %>
