@@ -7,6 +7,6 @@ module.exports.getLogin = (req, res, next) => {
 }
 
 module.exports.postLogin = (req, res, next) => {
-    res.setHeader('Set-Cookie', 'loggedIn=true');
-    res.redirect('/');
+    req.session.loggedIn = true;    // Assigning the middleware session() gives you access to a session object which is used to manage the session for each unique client 
+    res.redirect('/');              // Session information is by default stored in the ram
 }

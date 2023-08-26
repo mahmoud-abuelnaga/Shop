@@ -51,11 +51,6 @@ app.use((req, res, next) => {
     });
 });
 
-app.use((req, res, next) => {
-    req.loggedIn = req.get('Cookie').split('=')[1] == 'true';
-    console.log(req.loggedIn);
-    next();
-})
 app.use('/admin', adminRoutes);
 app.use(shopRoutes);
 app.use(authRoutes);

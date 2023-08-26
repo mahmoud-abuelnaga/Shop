@@ -26,7 +26,7 @@ exports.getIndex = (req, res, next) => {
             prods: products,
             pageTitle: 'Shop',
             path: '/',
-            loggedIn: req.loggedIn,
+            loggedIn: req.session.loggedIn,
         });
     });
 };
