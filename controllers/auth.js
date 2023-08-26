@@ -25,6 +25,12 @@ module.exports.postLogin = (req, res, next) => {
     });
 }
 
+module.exports.logout = (req, res, next) => {
+    req.session.destroy(() => {
+        res.redirect('/');
+    });
+}
+
 module.exports.isLoggedIn = (req, res, next) => {
     if (req.session.loggedIn) {
         next();
