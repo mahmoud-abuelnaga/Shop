@@ -42,3 +42,19 @@ module.exports.isLoggedIn = (req, res, next) => {
         res.redirect('/login');
     }
 }
+
+module.exports.getSignup = (req, res, next) => {
+    res.render('auth/signup', {
+        path: '/signup',
+        pageTitle: 'Signup',
+        loggedIn: req.session.loggedIn,
+    });
+}
+
+module.exports.postSignup = (req, res, next) => {
+    const email = req.body.email;
+    const password = req.body.password;
+    const confirmPassword = req.body.confirmPassword;
+
+    
+}
