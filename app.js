@@ -6,6 +6,7 @@ const errorController = require('./controllers/error');
 
 // NPM Modules
 const express = require('express');
+const session = require('express-session');
 
 // Utilities
 const mongoose = require('mongoose');
@@ -16,6 +17,7 @@ const User = require('./models/user');
 // Routes
 const adminRoutes = require('./routes/admin');
 const shopRoutes = require('./routes/shop');
+const authRoutes = require('./routes/auth');
 const errorRoutes = require('./routes/error');
 
 // Constants
@@ -30,6 +32,11 @@ app.set('views', 'views');
 
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(session({
+    secret: 'mysecret',
+    resave: false,  // Only resave the session when there is a change in the session information. If set to true, the session is save with every request from the user
+    saveUninitialized: false,   //  This can be useful to prevent storing empty or unnecessary sessions for users who don't perform any actions that require session data.
+}));
 
 // Register the user
 app.use((req, res, next) => {
@@ -43,8 +50,15 @@ app.use((req, res, next) => {
         console.log(err);
     });
 });
+
+app.use((req, res, next) => {
+    req.loggedIn = req.get('Cookie').split('=')[1] == 'true';
+    console.log(req.loggedIn);
+    next();
+})
 app.use('/admin', adminRoutes);
 app.use(shopRoutes);
+app.use(authRoutes);
 app.use(errorRoutes);
 app.use(errorController.get404);
 
