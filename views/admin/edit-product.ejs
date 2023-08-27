@@ -25,6 +25,7 @@
                 <textarea name="description" id="description" rows="5"><% if (path == '/admin/add-product') {%><%} else {%> <%= product.description %> <%} %></textarea>
             </div>
 
+            <input type="hidden" name="token" value="<%= token %>">
             <button class="btn" type="submit"><% if (path == '/admin/add-product') { %>Add Product<% } else { %>Edit Product<% } %> </button>
         </form>
     </main>
