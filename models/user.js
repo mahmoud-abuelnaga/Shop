@@ -11,8 +11,19 @@ const Order = require('./order');
 
 // Model Definition
 const UserSchema = new mongoose.Schema({
-    name: String,
-    email: String,
+    name: {
+        type: String,
+        required: true,
+    },
+    email: {
+        type: String,
+        required: true,
+        unique: true,
+    },
+    password: {
+        type: String,
+        required: true,
+    },
     cart: [{productId: {type: mongoose.ObjectId, ref: 'Product',}, quantity: {type: Number, default: 1}}],
 },
 {
@@ -37,13 +48,15 @@ const UserSchema = new mongoose.Schema({
 
         async getCart() {
             const result = await this.populate('cart.productId');
-            const cart = this.cart.map(item => {
+            let totalPrice = 0;
+            const products = this.cart.map(item => {
                 let product = {_id: item.productId._id, title: item.productId.title, price: item.productId.price, sellerId: item.productId.sellerId, quantity: item.quantity};
                 product.quantity = item.quantity;
+                totalPrice += (product.price * product.quantity);
                 return product;
             });
 
-            return cart;
+            return {products, totalPrice};
         },
 
         async getOrders() {
@@ -52,9 +65,7 @@ const UserSchema = new mongoose.Schema({
         },
 
         async createOrder() {
-            const products = await this.getCart();
-            console.log(products);
-            const totalPrice = products.reduce((price, product) => price + (product.price * product.quantity), 0);
+            const {products, totalPrice} = await this.getCart();
             const order = new Order({products, totalPrice, userId: this._id});
             const result = await order.save();
             this.cart = [];

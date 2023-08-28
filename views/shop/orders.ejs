@@ -12,7 +12,7 @@
         <ul class="orders">
             <% for (let order of orders) { %>
                 <li class="orders__item">
-                    <h1>#<%= order._id %> (Total: $<%= order.totalPrice %>)</h1>
+                    <h1>Order - #<%= order._id %> (Total: $<%= order.totalPrice %>)</h1>
                     <ul class="orders__products">
                         <% for (let product of order.products) { %>
                             <li class="orders__products-item"><%= product.title %> (<%= product.quantity %>) ($<%= product.quantity * product.price %>)</li>

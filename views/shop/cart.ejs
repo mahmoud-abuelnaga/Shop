@@ -19,6 +19,7 @@
             <div class="centered">
                 <form action="/create-order" method="post">
                     <button  type="submit" class="btn">Place an Order</button>
+                    <input type="hidden" name="token" value="<%= token %>">
                 </form>
             </div>
         <% } else { %>

@@ -6,7 +6,7 @@ const express = require('express');
 
 // Controllers
 const shopController = require('../controllers/shop');
-const {isLoggedIn} = require('../controllers/auth');
+const {isLoggedIn, verifyToken} = require('../middlewares/auth');
 
 // Routes
 const router = express.Router();
@@ -19,11 +19,11 @@ router.get('/products/:id', shopController.getProductDetails);  // Adding dynami
 
 router.get('/cart', isLoggedIn, shopController.getCart);
 
-router.post('/cart', isLoggedIn, shopController.updateCart)
+router.post('/cart', isLoggedIn, verifyToken, shopController.updateCart)
 
 router.get('/orders', isLoggedIn, shopController.getOrders);
 
-router.post('/create-order', isLoggedIn, shopController.createOrder);
+router.post('/create-order', isLoggedIn, verifyToken, shopController.createOrder);
 
 router.get('/checkout', isLoggedIn, shopController.getCheckout);
 

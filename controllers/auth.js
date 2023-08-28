@@ -1,32 +1,65 @@
 // Models
 const User = require('../models/user');
 
+// NPM Packages
+const bcrypt = require('bcryptjs');
+const Tokens = require('csrf');
+
+// Constants
+const SALT = 4;
+const tokens = new Tokens();    // Used to CSRF Tokens generation
+
+
+// Controller
+
 module.exports.getLogin = (req, res, next) => {
+    const errorMessage = req.flash('error')[0];
     res.render('auth/login', {
         path: '/login',
         pageTitle: 'Login',
-        loggedIn: req.session.loggedIn,
+        userExists: req.query.notice,
+        errorMessage,
     });
 }
 
 module.exports.postLogin = (req, res, next) => {
-    User.findById('64e6d11afa247a09690d5dec')
-    .then(user => {
-        if (user) {
-            req.session.loggedIn = true;    
-            req.session.userId = user._id;
-            req.session.save((err) => { // Make sure that the session is save before proceeding
-                console.log(err);
+    const email = req.body.email;
+    const password = req.body.password;
+    let user;
+
+    User.findOne({ email })
+        .then(usr => {
+            if (usr) {
+                user = usr;
+                return bcrypt.compare(password, user.password);
+            } else {
+                req.flash('error', 'Invalid Email or Password');
+                res.redirect('/login');
+            }
+        })
+        .then(matched => {
+            if (matched) {
+                req.session.loggedIn = true;
+                req.session.userId = user._id;
+                return tokens.secret();
+            } else {
+                try {
+                    req.flash('error', 'Invalid Email or Password');
+                    res.redirect('/login');
+                } catch (err) {
+                    // Nothing
+                }
+            }
+        })
+        .then(secret => {
+            if (secret) {
+                req.session.secret = secret;
                 res.redirect('/');
-            });
-            
-        } else {
-            res.redirect('/404');
-        }
-    })
-    .catch(err => {
-        console.log(err);
-    });
+            }
+        })
+        .catch(err => {
+            console.log(err);
+        });
 }
 
 module.exports.logout = (req, res, next) => {
@@ -35,26 +68,40 @@ module.exports.logout = (req, res, next) => {
     });
 }
 
-module.exports.isLoggedIn = (req, res, next) => {
-    if (req.session.loggedIn) {
-        next();
-    } else {
-        res.redirect('/login');
-    }
-}
-
 module.exports.getSignup = (req, res, next) => {
     res.render('auth/signup', {
         path: '/signup',
         pageTitle: 'Signup',
-        loggedIn: req.session.loggedIn,
     });
 }
 
 module.exports.postSignup = (req, res, next) => {
+    const name = req.body.name;
     const email = req.body.email;
     const password = req.body.password;
     const confirmPassword = req.body.confirmPassword;
 
-    
+    User.findOne({ email })
+        .then(user => {
+            // console.log(user);
+            if (user) {
+                req.flash('error', 'This user already exists');
+                res.redirect('/login');
+            } else {
+                return bcrypt.hash(password, SALT);
+            }
+        })
+        .then(password => {
+            if (password) {
+                return User.create({ name, email, password });
+            }
+        })
+        .then(user => {
+            if (user) {
+                console.log('New User was created');
+                // console.log(user);
+                res.redirect('/login');
+            }
+        });
+
 }

@@ -1,10 +1,13 @@
+// Packages
 const path = require('path');
-
 const express = require('express');
 
+// Controllers
 const adminController = require('../controllers/admin');
 
+// Constants
 const router = express.Router();
+const { verifyToken } = require('../middlewares/auth');
 
 // /admin/products => GET
 router.get('/products', adminController.getProducts);
@@ -13,15 +16,15 @@ router.get('/products', adminController.getProducts);
 router.get('/add-product', adminController.getAddProduct);
 
 // /admin/add-product => POST
-router.post('/add-product', adminController.postAddProduct);
+router.post('/add-product', verifyToken, adminController.postAddProduct);
 
 // /admin/edit-product/:id => GET
 router.get('/edit-product/:id', adminController.getEditProduct);
 
 // /admin/edit-product/:id => POST
-router.post('/edit-product/:id', adminController.postEditProduct);
+router.post('/edit-product/:id', verifyToken, adminController.postEditProduct);
 
 // /admin/delet-product => POST
-router.post('/delete-product/:id', adminController.deleteProduct);
+router.post('/delete-product/:id', verifyToken, adminController.deleteProduct);
 
 module.exports = router;

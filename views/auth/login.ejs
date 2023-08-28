@@ -5,8 +5,10 @@
 
 <body>
     <%- include('../includes/navigation.ejs') %>
-
     <main>
+        <% if (errorMessage) { %>
+            <div class="user-message user-message--error"><%= errorMessage %></div>
+        <% } %>
         <form action="/login" method="post" class="login-form">
             <div class="form-control">
                 <label for="email">Email</label>
@@ -16,6 +18,7 @@
                 <label for="password">Password</label>
                 <input type="password" name="password" id="password">
             </div>
+            <input type="hidden" name="token" value="<%= token %>">
             <button class="btn" type="submit">Login</button>
         </form>
     </main>
