@@ -151,21 +151,10 @@ exports.getEditPass = (req, res, next) => {
         });
     }
 
-    User.findOne({resetToken})
+    User.findOne({resetToken, resetTokenExpiration: {$gt: Date.now()}})
     .then(user => {
         if (user) {
-            if (Date.now() <= user.resetTokenExpiration) {
-                renderResetPass();
-            } else {
-                user.resetTokenExpiration = null;
-                user.resetToken = null;
-                user.save();
-                res.render('messages/tokenExpire', {
-                    path: '/reset-pass',
-                    pageTitle: 'Token Expired',
-                });
-            }
-            
+            renderResetPass();
         } else {
             res.render('messages/tokenExpire', {
                 path: '/reset-pass',
