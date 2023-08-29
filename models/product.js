@@ -5,7 +5,7 @@
 const mongoose = require('mongoose');
 
 // Models
-const User = require('./user');
+
 
 // Model Definition
 const ProductSchema = new mongoose.Schema({

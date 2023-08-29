@@ -7,8 +7,8 @@ const bcrypt = require('bcryptjs');
 const Tokens = require("csrf");
 
 // Models
-const {Product} = require('./product');
 const Order = require('./order');
+const { Product } = require("./product");
 
 // Constants
 const SALT = 4;
@@ -102,6 +102,11 @@ const UserSchema = new mongoose.Schema({
                 <p>You requested a password reset</p>
                 <p>Click this <a href="http://localhost:3000/edit-pass/${resetToken}">link</a> if you want to reset. Otherwise just ignore this email.</p>
             `);
+        },
+
+        async getOwnedProducts() {
+            const ownedProducts = await Product.find({sellerId: this._id});
+            return ownedProducts;
         }
     }
 });

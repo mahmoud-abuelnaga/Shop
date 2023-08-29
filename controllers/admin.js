@@ -12,6 +12,9 @@ const express = require('express');
 // Utilites
 
 
+// Helpers
+
+
 // Constants 
 
 /**
@@ -31,7 +34,7 @@ exports.getAddProduct = (req, res, next) => {
 /**
  * Adds the product which is submitted in '/admin/add-product' form to the database. After the product is added, the user is redirected to '/admin/products' to see the product.
  * 
- * If the function fails to add the product to the database, the user is redirected to '/create-product-error' page
+ * If the function fails to add the product to the database, the user is redirected to '/404' page
  * 
  * @param {express.Request} req 
  * @param {express.Response} res 
@@ -52,7 +55,7 @@ exports.postAddProduct = (req, res, next) => {
     })
     .catch(err => {
         console.log(err);
-        res.redirect('/create-product-error');
+        res.redirect('/404');
     });
 };
 
@@ -64,12 +67,13 @@ exports.postAddProduct = (req, res, next) => {
  * @param {express.NextFunction} next 
  */
 exports.getProducts = (req, res, next) => {
-    Product.find()
+    req.user.getOwnedProducts()
     .then(products => {
         res.render('admin/products', {
             path: '/admin/products',
             pageTitle: 'Admin Products',
             prods: products,
+            userId: req.user._id,
         });
     })
     .catch(err => {
@@ -86,7 +90,7 @@ exports.getProducts = (req, res, next) => {
  * @param {express.NextFunction} next 
  */
 exports.getEditProduct = (req, res, next) => {
-    Product.findById(req.params.id)
+    Product.findOne({_id: req.params.id, sellerId: req.user._id})
     .then(product => {
         if (!product) {
             errorControllers.get404(req, res, next);
@@ -104,7 +108,7 @@ exports.getEditProduct = (req, res, next) => {
 /**
  * Submit the the changes in the edit product form on this route: '/admin/edit-product/:id' to the database, then redirects the user to: '/admin/products'.
  * 
- * If editing the product failed in the database, the user is redirected to: '/create-product-error'
+ * If editing the product failed in the database, the user is redirected to: '/404'
  * 
  * @param {express.Request} req 
  * @param {express.Response} res 
@@ -119,14 +123,14 @@ exports.postEditProduct = (req, res, next) => {
         price: parseFloat(req.body.price),
     };
 
-    Product.updateOne({_id: idToUpdate}, productData)
+    Product.updateOne({_id: idToUpdate, sellerId: req.user._id}, productData)
     .then(result => {
         console.log('....Product Updated....');
         res.redirect('/admin/products');
     })
     .catch(err => {
         console.log(err);
-        res.redirect('/create-product-error');
+        res.redirect('/404');
     });
     
 }
@@ -138,18 +142,18 @@ exports.postEditProduct = (req, res, next) => {
  * @param {express.NextFunction} next 
  */
 exports.deleteProduct = (req, res, next) => {
-    Product.deleteOne({_id: req.params.id})
+    Product.deleteOne({_id: req.params.id, sellerId: req.user._id})
     .then(result => {
         console.log('....Deleted Product from products collection....');
         return Product.removeFromCarts(req.params.id);
     })
     .then(result => {
         console.log('....Deleted product form users cart....');
-        console.log(result);
+        // console.log(result);
         res.redirect('/admin/products');
     })
     .catch(err => {
         console.log(err);
-        res.redirect('/create-product-error');
+        res.redirect('/404');
     });
 }
