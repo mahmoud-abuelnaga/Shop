@@ -2,7 +2,6 @@
 const Tokens = require('csrf');
 
 // Utilites
-const {getGlobalSecret} = require('../util/auth');
 
 // Constants
 const tokens = new Tokens();
@@ -18,8 +17,6 @@ module.exports.isLoggedIn = (req, res, next) => {
 module.exports.embedToken = (req, res, next) => {
     if (req.session.loggedIn) {
         res.locals.token = tokens.create(req.session.secret);
-    } else {
-        res.locals.token = tokens.create(getGlobalSecret());
     }
     
     next();
@@ -30,7 +27,7 @@ module.exports.verifyToken = (req, res, next) => {
     if (req.session.loggedIn) {
         secret = req.session.secret; 
     } else {
-        secret = getGlobalSecret();
+        secret = req.secret;
     }
 
     const verified = tokens.verify(secret, req.body.token);
@@ -39,4 +36,9 @@ module.exports.verifyToken = (req, res, next) => {
     } else {
         res.redirect('/authentication-error');
     }
+}
+
+module.exports.getPendingSecret = (req, res, next) => {
+    req.secret = req.flash('secret')[0];
+    next();
 }

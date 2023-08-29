@@ -14,7 +14,7 @@ const URI = `mongodb+srv://mahmoud:${process.env.mongoDB_shop_pass}@cluster0.ffk
 
 // Controllers
 const errorController = require('./controllers/error');
-const {isLoggedIn, embedToken} = require('./middlewares/auth');
+const {isLoggedIn, embedToken, getPendingSecret} = require('./middlewares/auth');
 
 // Utilities
 const {genGlobalSecret} = require('./util/auth');
@@ -34,6 +34,7 @@ const app = express();
 app.set('view engine', 'ejs');
 app.set('views', 'views');
 
+// Middlewares
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(session({
@@ -46,8 +47,6 @@ app.use(session({
 }));
 
 app.use(flash());   // You need to define the flash middleware after the session middleware as the flash messages are stored in the sessions database
-
-app.use(embedToken);
 
 app.use((req, res, next) => {
     res.locals.loggedIn =  req.session.loggedIn;
@@ -69,11 +68,15 @@ app.use((req, res, next) => {
     }
 });
 
+app.use(embedToken);    // Embed token in forms for logged in user
+app.use(getPendingSecret)
+
 // Routes
 app.use('/admin', isLoggedIn, adminRoutes);
 app.use(shopRoutes);
 app.use(authRoutes);
 app.use(errorRoutes);
+
 app.use(errorController.get404);
 
 

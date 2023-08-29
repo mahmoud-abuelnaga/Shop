@@ -13,5 +13,7 @@ router.post('/login', verifyToken, authController.postLogin);
 router.post('/logout', verifyToken, authController.logout);
 router.get('/signup', authController.getSignup);
 router.post('/signup', verifyToken, authController.postSignup);
+router.get('/reset-pass', authController.getResetPass);
+router.post('/reset-pass', verifyToken, authController.postResetPass);
 
 module.exports = router;
