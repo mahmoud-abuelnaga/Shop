@@ -6,12 +6,21 @@ const {Product} = require('../models/product');
 // Controllers
 const errorControllers = require('./error');
 
+// Modules
+const express = require('express');
+
 // Utilites
 
 
 // Constants 
 
-
+/**
+ * Renders a form to add a product to the database on this route: '/admin/add-product'
+ * 
+ * @param {express.Request} req 
+ * @param {express.Response} res 
+ * @param {express.NextFunction} next 
+ */
 exports.getAddProduct = (req, res, next) => {
     res.render('admin/edit-product', {
         pageTitle: 'Add Product',
@@ -19,6 +28,15 @@ exports.getAddProduct = (req, res, next) => {
     });
 };
 
+/**
+ * Adds the product which is submitted in '/admin/add-product' form to the database. After the product is added, the user is redirected to '/admin/products' to see the product.
+ * 
+ * If the function fails to add the product to the database, the user is redirected to '/create-product-error' page
+ * 
+ * @param {express.Request} req 
+ * @param {express.Response} res 
+ * @param {express.NextFunction} next 
+ */
 exports.postAddProduct = (req, res, next) => {
     const title = req.body.title;
     const imageUrl = req.body.imageUrl;
@@ -38,6 +56,13 @@ exports.postAddProduct = (req, res, next) => {
     });
 };
 
+/**
+ * Shows all the available products in '/admin/products' route
+ * 
+ * @param {express.Request} req 
+ * @param {express.Response} res 
+ * @param {express.NextFunction} next 
+ */
 exports.getProducts = (req, res, next) => {
     Product.find()
     .then(products => {
@@ -53,6 +78,13 @@ exports.getProducts = (req, res, next) => {
     
 };
 
+/**
+ * Renders a form to edit a product on this route: '/admin/edit-product/:id'. It works by providing the productId for the product you want to edit in the route 
+ * 
+ * @param {express.Request} req 
+ * @param {express.Response} res 
+ * @param {express.NextFunction} next 
+ */
 exports.getEditProduct = (req, res, next) => {
     Product.findById(req.params.id)
     .then(product => {
@@ -69,6 +101,15 @@ exports.getEditProduct = (req, res, next) => {
     });
 }
 
+/**
+ * Submit the the changes in the edit product form on this route: '/admin/edit-product/:id' to the database, then redirects the user to: '/admin/products'.
+ * 
+ * If editing the product failed in the database, the user is redirected to: '/create-product-error'
+ * 
+ * @param {express.Request} req 
+ * @param {express.Response} res 
+ * @param {express.NextFunction} next 
+ */
 exports.postEditProduct = (req, res, next) => {
     const idToUpdate = req.params.id;
     const productData = {
@@ -89,7 +130,13 @@ exports.postEditProduct = (req, res, next) => {
     });
     
 }
-
+/**
+ * Deletes a product from the database using the id provided in this route: '/delete-product/:id'
+ * 
+ * @param {express.Request} req 
+ * @param {express.Response} res 
+ * @param {express.NextFunction} next 
+ */
 exports.deleteProduct = (req, res, next) => {
     Product.deleteOne({_id: req.params.id})
     .then(result => {

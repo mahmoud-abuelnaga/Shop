@@ -14,7 +14,7 @@ const URI = `mongodb+srv://mahmoud:${process.env.mongoDB_shop_pass}@cluster0.ffk
 
 // Controllers
 const errorController = require('./controllers/error');
-const {isLoggedIn, embedToken, getPendingSecret} = require('./middlewares/auth');
+const {isLoggedIn, getAuthToken, getUnAuthSecret, getUnAuthToken} = require('./middlewares/auth');
 
 // Utilities
 const {genGlobalSecret} = require('./util/auth');
@@ -68,13 +68,13 @@ app.use((req, res, next) => {
     }
 });
 
-app.use(embedToken);    // Embed token in forms for logged in user
-app.use(getPendingSecret)
+app.use(getAuthToken);
+app.use(getUnAuthSecret);   
 
 // Routes
 app.use('/admin', isLoggedIn, adminRoutes);
 app.use(shopRoutes);
-app.use(authRoutes);
+app.use(getUnAuthToken, authRoutes);
 app.use(errorRoutes);
 
 app.use(errorController.get404);

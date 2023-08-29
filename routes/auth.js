@@ -1,19 +1,32 @@
 // NPM Packages
-const express = require('express');
+const express = require("express");
 
 // Controllers
-const authController = require('../controllers/auth');
-const { verifyToken } = require('../middlewares/auth');
-
+const authController = require("../controllers/auth");
+const { verifyToken, getUnAuthToken, isLoggedIn } = require("../middlewares/auth");
 
 const router = express.Router();
 
-router.get('/login', authController.getLogin);
-router.post('/login', verifyToken, authController.postLogin);
-router.post('/logout', verifyToken, authController.logout);
-router.get('/signup', authController.getSignup);
-router.post('/signup', verifyToken, authController.postSignup);
-router.get('/reset-pass', authController.getResetPass);
-router.post('/reset-pass', verifyToken, authController.postResetPass);
+router
+    .route("/login")
+    .get(authController.getLogin)
+    .post(verifyToken, authController.postLogin);
+
+router.post("/logout", isLoggedIn, verifyToken, authController.logout);
+
+router
+    .route("/signup")
+    .get(authController.getSignup)
+    .post(verifyToken, authController.postSignup);
+
+router
+    .route("/reset-pass")
+    .get(authController.getResetPass)
+    .post(verifyToken, authController.postResetPass);
+
+router
+    .route("/edit-pass/:resetToken")
+    .get(authController.getEditPass)
+    .post(verifyToken, authController.postEditPass);
 
 module.exports = router;

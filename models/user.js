@@ -1,12 +1,24 @@
 // Utilites
-
+const { sendHTMLMail } = require("../util/mail");
 
 // NPM Packages
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
+const Tokens = require("csrf");
 
 // Models
 const {Product} = require('./product');
 const Order = require('./order');
+
+// Constants
+const SALT = 4;
+const tokens = new Tokens();
+
+// Helpers
+const hashPassword = (value) => {
+    const hashedValue = bcrypt.hashSync(value, SALT);
+    return hashedValue;
+}
 
 
 // Model Definition
@@ -23,8 +35,15 @@ const UserSchema = new mongoose.Schema({
     password: {
         type: String,
         required: true,
+        set: hashPassword
     },
     cart: [{productId: {type: mongoose.ObjectId, ref: 'Product',}, quantity: {type: Number, default: 1}}],
+    resetToken: {
+        type: String,
+    },
+    resetTokenExpiration: {
+        type: Date,
+    },
 },
 {
     methods: {
@@ -71,6 +90,18 @@ const UserSchema = new mongoose.Schema({
             this.cart = [];
             await this.save();
             return result;
+        },
+
+        async sendResetPassEmail() {
+            const secret = await tokens.secret();
+            const resetToken = await bcrypt.hash(secret, SALT);
+            this.resetToken = resetToken;
+            this.resetTokenExpiration = Date.now() + 30 * 60 * 1000;    // Token expire after 30 min
+            this.save();
+            sendHTMLMail(this.email, 'Password Reset', `
+                <p>You requested a password reset</p>
+                <p>Click this <a href="http://localhost:3000/edit-pass/${resetToken}">link</a> if you want to reset. Otherwise just ignore this email.</p>
+            `);
         }
     }
 });

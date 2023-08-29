@@ -1,6 +1,9 @@
 // Models
 const User = require("../models/user");
 
+// Core Modules
+
+
 // NPM Packages
 const bcrypt = require("bcryptjs");
 const Tokens = require("csrf");
@@ -10,21 +13,16 @@ const SALT = 4;
 const tokens = new Tokens(); // Used to CSRF Tokens generation
 
 // Utilites
-const { sendTextMail } = require("../util/mail");
 
 // Controller
 
 module.exports.getLogin = (req, res, next) => {
-    tokens.secret().then((secret) => {
-        req.flash("secret", secret);
-        res.locals.token = tokens.create(secret);
-        const errorMessage = req.flash("error")[0];
-        res.render("auth/login", {
-            path: "/login",
-            pageTitle: "Login",
-            userExists: req.query.notice,
-            errorMessage,
-        });
+    const errorMessage = req.flash("error")[0];
+    res.render("auth/login", {
+        path: "/login",
+        pageTitle: "Login",
+        userExists: req.query.notice,
+        errorMessage,
     });
 };
 
@@ -63,20 +61,6 @@ module.exports.postLogin = (req, res, next) => {
                 res.redirect("/");
             }
         })
-        .then(() => {
-            // sendTextMail(
-            //     "abuelnaga.m0@gmail.com",
-            //     "New Login",
-            //     "Someone just logged in",
-            //     (err, info) => {
-            //         if (err) {
-            //             console.log(err);
-            //         } else {
-            //             console.log(info);
-            //         }
-            //     }
-            // );
-        })
         .catch((err) => {
             console.log(err);
         });
@@ -89,15 +73,11 @@ module.exports.logout = (req, res, next) => {
 };
 
 module.exports.getSignup = (req, res, next) => {
-    tokens.secret().then((secret) => {
-        const errorMessage = req.flash("error")[0];
-        res.locals.token = tokens.create(secret);
-        req.flash('secret', secret);
-        res.render("auth/signup", {
-            path: "/signup",
-            pageTitle: "Signup",
-            errorMessage,
-        });
+    const errorMessage = req.flash("error")[0];
+    res.render("auth/signup", {
+        path: "/signup",
+        pageTitle: "Signup",
+        errorMessage,
     });
 };
 
@@ -114,11 +94,6 @@ module.exports.postSignup = (req, res, next) => {
                 req.flash("error", "This user already exists");
                 res.redirect("/signup");
             } else {
-                return bcrypt.hash(password, SALT);
-            }
-        })
-        .then((password) => {
-            if (password) {
                 return User.create({ name, email, password });
             }
         })
@@ -127,26 +102,104 @@ module.exports.postSignup = (req, res, next) => {
                 console.log("New User was created");
                 res.redirect("/login");
             }
+        })
+        .catch(err => {
+            console.log(err);
+            res.redirect('/signup');
         });
 };
 
 exports.getResetPass = (req, res, next) => {
-    const errorMessage = req.flash("error")[0];
-    res.render("auth/resetPass", {
-        path: "/reset-pass",
-        pageTitle: "Reset Password",
-        errorMessage,
-    });
+    if (req.query.emailSent == "true") {
+        res.render("messages/resetPass", {
+            path: "/reset-pass",
+            pageTitle: "Email Sent",
+        });
+    } else {
+        const errorMessage = req.flash("error")[0];
+        res.render("auth/resetPass", {
+            path: "/reset-pass",
+            pageTitle: "Reset Password",
+            errorMessage,
+        });
+    }
 };
 
 exports.postResetPass = (req, res, next) => {
     const email = req.body.email;
     User.findOne({ email }).then((user) => {
         if (user) {
-            
+            user.sendResetPassEmail();
+            res.redirect("reset-pass?emailSent=true");
         } else {
             req.flash("error", "This email doesn't exist");
             res.redirect("/reset-pass");
         }
     });
 };
+
+exports.getEditPass = (req, res, next) => {
+    const resetToken = req.params.resetToken;
+
+    const renderResetPass = () => {
+        const errorMessage = req.flash('error')[0];
+        res.render("auth/resettingPass", {
+            path: "/reset-pass",
+            pageTitle: "Resetting Password",
+            resetToken,
+            errorMessage,
+        });
+    }
+
+    User.findOne({resetToken})
+    .then(user => {
+        if (user) {
+            if (Date.now() <= user.resetTokenExpiration) {
+                renderResetPass();
+            } else {
+                user.resetTokenExpiration = null;
+                user.resetToken = null;
+                user.save();
+                res.render('messages/tokenExpire', {
+                    path: '/reset-pass',
+                    pageTitle: 'Token Expired',
+                });
+            }
+            
+        } else {
+            res.render('messages/tokenExpire', {
+                path: '/reset-pass',
+                pageTitle: 'Token Expired',
+            });
+        }
+    })
+};
+
+// Check if you check for the password in signup
+exports.postEditPass= (req, res, next) => {
+    const resetToken = req.params.resetToken;
+    const password = req.body.pass;
+    const confirmPass = req.body.confirmPass;
+
+    User.findOne({resetToken})
+    .then(user => {
+        if (user) {
+            if (password != confirmPass) {
+                req.flash('error', "The confirmed password doesn't match the password");
+                res.redirect(`/edit-pass/${resetToken}`);
+            } else {
+                user.password = password;
+                user.resetToken = null;
+                user.resetTokenExpiration = null;
+                user.save();
+                res.redirect('/login');
+            }
+        } else {
+            res.render('messages/tokenExpire', {
+                path: '/reset-pass',
+                pageTitle: 'Token Expired',
+            });
+        }
+    });
+    
+}
