@@ -33,15 +33,7 @@ module.exports.postLogin = (req, res, next) => {
     if (result.isEmpty()) {
         req.session.loggedIn = true;
         req.session.userId = req.user._id;
-        tokens
-            .secret()
-            .then((secret) => {
-                req.session.secret = secret;
-                res.redirect("/");
-            })
-            .catch((err) => {
-                console.log(err);
-            });
+        res.redirect("/");
     } else {
         const errorMessage = result.mapped().email.msg;
         res.render("auth/login", {

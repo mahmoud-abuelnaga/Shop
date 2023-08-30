@@ -14,7 +14,7 @@ const URI = `mongodb+srv://mahmoud:${process.env.mongoDB_shop_pass}@cluster0.ffk
 
 // Controllers
 const errorController = require('./controllers/error');
-const {isLoggedIn, getAuthToken, getUnAuthSecret, getUnAuthToken} = require('./middlewares/auth');
+const {isLoggedIn, getToken} = require('./middlewares/auth');
 
 // Utilities
 const {genGlobalSecret} = require('./util/auth');
@@ -48,6 +48,8 @@ app.use(session({
 
 app.use(flash());   // You need to define the flash middleware after the session middleware as the flash messages are stored in the sessions database
 
+app.use(getToken);
+
 app.use((req, res, next) => {
     res.locals.loggedIn =  req.session.loggedIn;
     next();
@@ -68,13 +70,10 @@ app.use((req, res, next) => {
     }
 });
 
-app.use(getAuthToken);
-app.use(getUnAuthSecret);   
-
 // Routes
 app.use('/admin', isLoggedIn, adminRoutes);
 app.use(shopRoutes);
-app.use(getUnAuthToken, authRoutes);
+app.use(authRoutes);
 app.use(errorRoutes);
 
 app.use(errorController.get404);
