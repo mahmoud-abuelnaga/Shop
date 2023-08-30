@@ -26,11 +26,13 @@ const UserSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true,
+        set: name => name.trim(),
     },
     email: {
         type: String,
         required: true,
         unique: true,
+        set: email => email.trim().toLowerCase(),
     },
     password: {
         type: String,

@@ -7,6 +7,7 @@ const User = require("../models/user");
 // NPM Packages
 const bcrypt = require("bcryptjs");
 const Tokens = require("csrf");
+const {validationResult} = require('express-validator');
 
 // Constants
 const SALT = 4;
@@ -82,21 +83,14 @@ module.exports.getSignup = (req, res, next) => {
 };
 
 module.exports.postSignup = (req, res, next) => {
+    const errors = validationResult(req);
     const name = req.body.name;
     const email = req.body.email;
     const password = req.body.password;
     const confirmPassword = req.body.confirmPassword;
 
-    User.findOne({ email })
-        .then((user) => {
-            // console.log(user);
-            if (user) {
-                req.flash("error", "This user already exists");
-                res.redirect("/signup");
-            } else {
-                return User.create({ name, email, password });
-            }
-        })
+    if (errors.isEmpty()) {
+        User.create({ name, email, password })
         .then((user) => {
             if (user) {
                 console.log("New User was created");
@@ -107,6 +101,12 @@ module.exports.postSignup = (req, res, next) => {
             console.log(err);
             res.redirect('/signup');
         });
+    } else {
+        console.log(errors);
+    }
+    
+
+    
 };
 
 exports.getResetPass = (req, res, next) => {
@@ -167,8 +167,8 @@ exports.getEditPass = (req, res, next) => {
 // Check if you check for the password in signup
 exports.postEditPass= (req, res, next) => {
     const resetToken = req.params.resetToken;
-    const password = req.body.pass;
-    const confirmPass = req.body.confirmPass;
+    const password = req.body.password;
+    const confirmPass = req.body.confirmPassword;
 
     User.findOne({resetToken})
     .then(user => {

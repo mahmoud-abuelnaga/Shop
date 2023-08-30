@@ -1,6 +1,9 @@
 // NPM Packages
 const express = require("express");
 
+// Validators
+const authValidator = require('../validators/auth');
+
 // Controllers
 const authController = require("../controllers/auth");
 const { verifyToken, getUnAuthToken, isLoggedIn } = require("../middlewares/auth");
@@ -17,7 +20,7 @@ router.post("/logout", isLoggedIn, verifyToken, authController.logout);
 router
     .route("/signup")
     .get(authController.getSignup)
-    .post(verifyToken, authController.postSignup);
+    .post(verifyToken, [authValidator.validName, authValidator.validSignUpEmail, authValidator.validPasssword, authValidator.validConfirmPassword], authController.postSignup);
 
 router
     .route("/reset-pass")
@@ -27,6 +30,6 @@ router
 router
     .route("/edit-pass/:resetToken")
     .get(authController.getEditPass)
-    .post(verifyToken, authController.postEditPass);
+    .post(verifyToken, [authValidator.validPasssword, authValidator.validConfirmPassword], authController.postEditPass);
 
 module.exports = router;

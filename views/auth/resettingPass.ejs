@@ -12,12 +12,12 @@
         <% } %>
         <form class="login-form" action="/edit-pass/<%= resetToken %>" method="POST">
             <div class="form-control">  
-                <label for="pass">Password</label>
-                <input type="password" name="pass" id="pass">
+                <label for="password">Password</label>
+                <input type="password" name="password" id="password">
             </div>
             <div class="form-control">
-                <label for="confirmPass">Confirm Password</label>
-                <input type="password" name="confirmPass" id="confirmPass">
+                <label for="confirmPassword">Confirm Password</label>
+                <input type="password" name="confirmPassword" id="confirmPassword">
             </div>
             <input type="hidden" name="token" value="<%= token %>">
             <button class="btn" type="submit">Reset Password</button>
