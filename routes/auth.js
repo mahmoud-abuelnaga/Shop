@@ -13,7 +13,7 @@ const router = express.Router();
 router
     .route("/login")
     .get(authController.getLogin)
-    .post(verifyToken, authController.postLogin);
+    .post(verifyToken, [authValidator.validLoginParams], authController.postLogin);
 
 router.post("/logout", isLoggedIn, verifyToken, authController.logout);
 
@@ -25,11 +25,11 @@ router
 router
     .route("/reset-pass")
     .get(authController.getResetPass)
-    .post(verifyToken, authController.postResetPass);
+    .post(verifyToken, [authValidator.validLoginEmail], authController.postResetPass);
 
 router
     .route("/edit-pass/:resetToken")
-    .get(authController.getEditPass)
-    .post(verifyToken, [authValidator.validPasssword, authValidator.validConfirmPassword], authController.postEditPass);
+    .get([authValidator.validResetToken], authController.getEditPass)
+    .post(verifyToken, [authValidator.validResetToken, authValidator.validPasssword, authValidator.validConfirmPassword], authController.postEditPass);
 
 module.exports = router;

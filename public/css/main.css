@@ -261,3 +261,18 @@ form {
     width: 30rem;
   }
 }
+
+.error-message {
+  display: block;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background-color: #ffdddd;
+  color: #ff0000;
+  padding: 8px;
+  border-radius: 5px;
+  font-size: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 1;
+  margin-bottom: 10px;
+}

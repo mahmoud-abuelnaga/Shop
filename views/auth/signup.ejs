@@ -7,28 +7,31 @@
    <%- include('../includes/navigation.ejs') %>
 
     <main>
-        <% if (errorMessage) { %>
-            <div class="user-message user-message--error"><%= errorMessage %></div>
-        <% } %>
         <form class="login-form" action="/signup" method="POST">
+            <% for (error in errors) { %>
+                <p class="error-message"><%= errors[error].msg %></p>
+            <% } %>
+            
             <div class="form-control">
                 <label for="name">Name</label>
-                <input type="text" name="name" id="name">
+                <input type="text" name="name" id="name" value="<%= oldInput.name %>" class="<% if (errors.name) { %>invalid<% } %>">
+                
             </div>
             <div class="form-control">
                 <label for="email">E-Mail</label>
-                <input type="email" name="email" id="email">
+                <input type="email" name="email" id="email" value="<%= oldInput.email %>" class="<% if (errors.email) { %>invalid<% } %>">
             </div>
             <div class="form-control">
                 <label for="password">Password</label>
-                <input type="password" name="password" id="password">
+                <input type="password" name="password" id="password" value="<%= oldInput.password %>" class="<% if (errors.password) { %>invalid<% } %>">
             </div>
             <div class="form-control">
                 <label for="confirmPassword">Confirm Password</label>
-                <input type="password" name="confirmPassword" id="confirmPassword">
+                <input type="password" name="confirmPassword" id="confirmPassword" value="<%= oldInput.confirmPassword %>" class="<% if (errors.confirmPassword) { %>invalid<% } %>">
             </div>
             <input type="hidden" name="token" value="<%= token %>">
             <button class="btn" type="submit">Signup</button>
         </form>
+        
     </main>
 <%- include('../includes/end.ejs') %>
