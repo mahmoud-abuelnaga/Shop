@@ -146,7 +146,7 @@ exports.getEditPass = (req, res, next) => {
     if (errors.isEmpty()) {
         renderResetPass();
     } else {
-        res.status(401).render("messages/tokenExpire", {
+        res.status(403).render("messages/tokenExpire", {
             path: "/reset-pass",
             pageTitle: "Token Expired",
         });
