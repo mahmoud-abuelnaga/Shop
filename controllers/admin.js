@@ -43,7 +43,7 @@ exports.getAddProduct = (req, res, next) => {
  */
 exports.postAddProduct = (req, res, next) => {
     const title = req.body.title;
-    const imageUrl = req.body.imageUrl;
+    const image = req.body.image;
     const price = req.body.price;
     const description = req.body.description;
     const result = validationResult(req);
@@ -54,7 +54,7 @@ exports.postAddProduct = (req, res, next) => {
             title,
             price,
             description,
-            imageUrl,
+            image,
             sellerId: req.user._id,
         });
         product
@@ -63,7 +63,7 @@ exports.postAddProduct = (req, res, next) => {
                 res.redirect("/admin/products");
             })
             .catch((err) => {
-                res.redirect('/500');
+                res.redirect("/500");
             });
     } else {
         const errors = result.mapped();
@@ -75,7 +75,7 @@ exports.postAddProduct = (req, res, next) => {
                 title,
                 price,
                 description,
-                imageUrl,
+                image,
             },
         });
     }
@@ -100,7 +100,7 @@ exports.getProducts = (req, res, next) => {
             });
         })
         .catch((err) => {
-            res.redirect('/500');
+            res.redirect("/500");
         });
 };
 
@@ -122,11 +122,12 @@ exports.getEditProduct = (req, res, next) => {
                     path: `/admin/edit-product/${product._id}`,
                     product,
                     oldInput: {},
+                    errors: {},
                 });
             }
         })
         .catch((err) => {
-            res.redirect('/500');
+            res.redirect("/500");
         });
 };
 
@@ -144,7 +145,7 @@ exports.postEditProduct = (req, res, next) => {
     const product = {
         title: req.body.title,
         description: req.body.description,
-        imageUrl: req.body.imageUrl,
+        image: req.body.image,
         price: parseFloat(req.body.price),
     };
 
@@ -156,7 +157,7 @@ exports.postEditProduct = (req, res, next) => {
                 res.redirect("/admin/products");
             })
             .catch((err) => {
-                res.redirect('/500');
+                res.redirect("/500");
             });
     } else {
         const errors = result.mapped();
@@ -179,7 +180,7 @@ exports.postEditProduct = (req, res, next) => {
 exports.deleteProduct = (req, res, next) => {
     Product.deleteOne({ _id: req.params.id, sellerId: req.user._id })
         .catch((err) => {
-            res.redirect('/500');
+            res.redirect("/500");
         })
         .then((result) => {
             return Product.removeFromCarts(req.params.id);

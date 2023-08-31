@@ -50,8 +50,12 @@ module.exports.postLogin = (req, res, next) => {
 };
 
 module.exports.logout = (req, res, next) => {
-    req.session.destroy(() => {
-        res.redirect("/");
+    req.session.destroy((err) => {
+        if (err) {
+            console.log(err);
+        } else {
+            res.redirect("/");
+        }
     });
 };
 
@@ -81,7 +85,7 @@ module.exports.postSignup = (req, res, next) => {
                 }
             })
             .catch((err) => {
-                res.redirect('/500');
+                res.redirect("/500");
             });
     } else {
         const errors = result.mapped();
@@ -174,16 +178,17 @@ exports.postEditPass = (req, res, next) => {
         req.user.password = password;
         req.user.resetToken = null;
         req.user.resetTokenExpiration = null;
-        req.user.save()
-        .then(result => {
-            res.redirect("/login");
-        })
-        .catch(err => {
-            res.redirect('/500');
-        });
+        req.user
+            .save()
+            .then((result) => {
+                res.redirect("/login");
+            })
+            .catch((err) => {
+                res.redirect("/500");
+            });
     } else {
         const error = errors[0];
-        if (error.path == 'resetToken') {
+        if (error.path == "resetToken") {
             res.status(401).render("messages/tokenExpire", {
                 path: "/reset-pass",
                 pageTitle: "Token Expired",

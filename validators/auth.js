@@ -22,15 +22,11 @@ exports.validName = body("name", "Invalid Name").notEmpty({
 exports.validSignUpEmail = body("email", "Please enter a valid email")
     .isEmail()
     .custom((email) => {
-        return User.findOne({ email })
-            .then((user) => {
-                if (user) {
-                    return Promise.reject("This email already exists");
-                }
-            })
-            .catch((err) => {
-                res.redirect("/500");
-            });
+        return User.findOne({ email }).then((user) => {
+            if (user) {
+                return Promise.reject("This email already exists");
+            }
+        });
     });
 
 /**
@@ -72,47 +68,37 @@ exports.validLoginParams = body("email", "Invalid email or password")
         ignore_whitespace: true,
     })
     .custom((email, { req }) => {
-        return User.findOne({ email })
-            .then((user) => {
-                if (user) {
-                    return user
-                        .validPassword(req.body.password)
-                        .then((valid) => {
-                            if (!valid) {
-                                return Promise.reject();
-                            } else {
-                                req.user = user;
-                            }
-                        });
-                } else {
-                    return Promise.reject();
-                }
-            })
-            .catch((err) => {
-                res.redirect("/500");
-            });
+        return User.findOne({ email }).then((user) => {
+            if (user) {
+                return user.validPassword(req.body.password).then((valid) => {
+                    if (!valid) {
+                        return Promise.reject();
+                    } else {
+                        req.user = user;
+                    }
+                });
+            } else {
+                return Promise.reject();
+            }
+        });
     });
 
 /**
  * Checks if the login email is valid. If the login email is valid, the user with the valid credentials is found under: `req.user`,
  * otherwise you can get errors using `validationResult(req)`
  */
-exports.validLoginEmail = body("email", "Invalid email")
+exports.validLoginEmail = body("email", "This email doesn't exist")
     .notEmpty({
         ignore_whitespace: true,
     })
     .custom((email, { req }) => {
-        return User.findOne({ email })
-            .then((user) => {
-                if (!user) {
-                    return Promise.reject();
-                } else {
-                    req.user = user;
-                }
-            })
-            .catch((err) => {
-                res.redirect("/500");
-            });
+        return User.findOne({ email }).then((user) => {
+            if (!user) {
+                return Promise.reject();
+            } else {
+                req.user = user;
+            }
+        });
     });
 
 /**
@@ -123,15 +109,11 @@ exports.validResetToken = param("resetToken").custom((resetToken, { req }) => {
     return User.findOne({
         resetToken,
         resetTokenExpiration: { $gt: Date.now() },
-    })
-        .then((user) => {
-            if (!user) {
-                return Promise.reject();
-            } else {
-                req.user = user;
-            }
-        })
-        .catch((err) => {
-            res.redirect("/500");
-        });
+    }).then((user) => {
+        if (!user) {
+            return Promise.reject();
+        } else {
+            req.user = user;
+        }
+    });
 });

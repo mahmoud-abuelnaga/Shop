@@ -17,7 +17,7 @@ const errorController = require('./controllers/error');
 const {isLoggedIn, getToken} = require('./middlewares/auth');
 
 // Utilities
-const {genGlobalSecret} = require('./util/auth');
+
 
 // Models
 const User = require('./models/user');
@@ -48,8 +48,6 @@ app.use(session({
 
 app.use(flash());   // You need to define the flash middleware after the session middleware as the flash messages are stored in the sessions database
 
-app.use(getToken);
-
 app.use((req, res, next) => {
     res.locals.loggedIn =  req.session.loggedIn;
     next();
@@ -70,6 +68,8 @@ app.use((req, res, next) => {
     }
 });
 
+app.use(getToken);
+
 // Routes
 app.use('/admin', isLoggedIn, adminRoutes);
 app.use(shopRoutes);
@@ -77,14 +77,16 @@ app.use(authRoutes);
 app.use(errorRoutes);
 app.use(errorController.get404);
 
+// Error Middleware
+// app.use((error, req, res, next) => {
+//     res.redirect('/500');
+// });
+
 const main = async () => {
     // Connect to the database
     const result = await mongoose.connect(URI);
     console.log('.....Connected to MongoDB database.....');
     // console.log(result);
-
-    // Generate Login Secret
-    await genGlobalSecret();
     
     console.log('....Listening to requests....')
     app.listen(3000);   // Listen on port 3000

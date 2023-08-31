@@ -16,8 +16,8 @@
                 <input type="text" name="title" id="title" value="<% if (path == '/admin/add-product') {%><%= oldInput.title %><%} else {%><%= product.title %><%} %>">
             </div>
             <div class="form-control">
-                <label for="imageUrl">Image URL</label>
-                <input type="text" name="imageUrl" id="imageUrl" value="<% if (path == '/admin/add-product') {%><%= oldInput.imageUrl %><%} else {%><%= product.imageUrl %><%} %>">
+                <label for="image">Image`</label>
+                <input type="file" name="image" id="image" value="<% if (path == '/admin/add-product') {%><%= oldInput.image %><%} else {%><%= product.image %><%} %>">
             </div>
             <div class="form-control">
                 <label for="price">Price</label>
@@ -33,3 +33,9 @@
         </form>
     </main>
 <%- include('../includes/end.ejs') %>
+
+
+<!-- <div class="form-control">
+    <label for="imageUrl">Image URL</label>
+    <input type="text" name="imageUrl" id="imageUrl" value="<% if (path == '/admin/add-product') {%><%= oldInput.imageUrl %><%} else {%><%= product.imageUrl %><%} %>">
+</div> -->

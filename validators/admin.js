@@ -10,7 +10,7 @@ const validDescription = body("description", 'Invalid Description. Description m
 
 const validPrice = body("price", 'Invalid Price. Minimum Price is: $0.5').notEmpty().isNumeric().isFloat({ min: 0.5 });
 
-const validImageUrl = body("imageUrl", 'Invalid image url.').notEmpty().isURL();
+const validImageUrl = body("image", 'Invalid image url.').notEmpty();
 
 const validProduct = [validTitle, validImageUrl, validPrice, validDescription];
 

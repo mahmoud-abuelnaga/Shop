@@ -35,19 +35,20 @@ module.exports.isLoggedIn = (req, res, next) => {
  */
 module.exports.getToken = (req, res, next) => {
     if (!req.session.secret) {
-        tokens.secret().then((secret) => {
-            req.session.secret = secret;
-            res.locals.token = tokens.create(req.session.secret);
-            next();
-        })
-        .catch(err => {
-            res.redirect('/500');
-        });
+        tokens
+            .secret()
+            .then((secret) => {
+                req.session.secret = secret;
+                res.locals.token = tokens.create(req.session.secret);
+                next();
+            })
+            .catch((err) => {
+                res.redirect("/500");
+            });
     } else {
         res.locals.token = tokens.create(req.session.secret);
+        next();
     }
-
-    next();
 };
 
 /**
