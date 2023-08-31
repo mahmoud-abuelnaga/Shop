@@ -36,7 +36,7 @@ module.exports.postLogin = (req, res, next) => {
         res.redirect("/");
     } else {
         const errorMessage = result.mapped().email.msg;
-        res.render("auth/login", {
+        res.status(422).render("auth/login", {
             path: "/login",
             pageTitle: "Login",
             userExists: req.query.notice,
@@ -81,12 +81,11 @@ module.exports.postSignup = (req, res, next) => {
                 }
             })
             .catch((err) => {
-                console.log(err);
-                res.redirect("/signup");
+                res.redirect('/500');
             });
     } else {
         const errors = result.mapped();
-        res.status(400).render("auth/signup", {
+        res.status(422).render("auth/signup", {
             path: "/signup",
             pageTitle: "Signup",
             oldInput: {
@@ -123,7 +122,7 @@ exports.postResetPass = (req, res, next) => {
         res.redirect("reset-pass?emailSent=true");
     } else {
         const errorMessage = errors[0].msg;
-        res.status(400).render("auth/resetPass", {
+        res.status(422).render("auth/resetPass", {
             path: "/reset-pass",
             pageTitle: "Reset Password",
             errorMessage,
@@ -163,7 +162,7 @@ exports.postEditPass = (req, res, next) => {
 
     const renderResetPass = () => {
         const errorMessage = errors[0].msg;
-        res.status(400).render("auth/resettingPass", {
+        res.status(422).render("auth/resettingPass", {
             path: "/reset-pass",
             pageTitle: "Resetting Password",
             resetToken,
@@ -178,6 +177,9 @@ exports.postEditPass = (req, res, next) => {
         req.user.save()
         .then(result => {
             res.redirect("/login");
+        })
+        .catch(err => {
+            res.redirect('/500');
         });
     } else {
         const error = errors[0];

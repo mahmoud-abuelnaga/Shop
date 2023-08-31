@@ -9,7 +9,7 @@ const User = require("../models/user");
  *
  * - It's not empty;
  */
-exports.validName = body("name", 'Invalid Name').notEmpty({
+exports.validName = body("name", "Invalid Name").notEmpty({
     ignore_whitespace: true,
 });
 
@@ -22,11 +22,15 @@ exports.validName = body("name", 'Invalid Name').notEmpty({
 exports.validSignUpEmail = body("email", "Please enter a valid email")
     .isEmail()
     .custom((email) => {
-        return User.findOne({ email }).then((user) => {
-            if (user) {
-                return Promise.reject("This email already exists");
-            }
-        });
+        return User.findOne({ email })
+            .then((user) => {
+                if (user) {
+                    return Promise.reject("This email already exists");
+                }
+            })
+            .catch((err) => {
+                res.redirect("/500");
+            });
     });
 
 /**
@@ -68,19 +72,25 @@ exports.validLoginParams = body("email", "Invalid email or password")
         ignore_whitespace: true,
     })
     .custom((email, { req }) => {
-        return User.findOne({ email }).then((user) => {
-            if (user) {
-                return user.validPassword(req.body.password).then((valid) => {
-                    if (!valid) {
-                        return Promise.reject();
-                    } else {
-                        req.user = user;
-                    }
-                });
-            } else {
-                return Promise.reject();
-            }
-        });
+        return User.findOne({ email })
+            .then((user) => {
+                if (user) {
+                    return user
+                        .validPassword(req.body.password)
+                        .then((valid) => {
+                            if (!valid) {
+                                return Promise.reject();
+                            } else {
+                                req.user = user;
+                            }
+                        });
+                } else {
+                    return Promise.reject();
+                }
+            })
+            .catch((err) => {
+                res.redirect("/500");
+            });
     });
 
 /**
@@ -92,28 +102,36 @@ exports.validLoginEmail = body("email", "Invalid email")
         ignore_whitespace: true,
     })
     .custom((email, { req }) => {
-        return User.findOne({ email }).then((user) => {
-            if (!user) {
-                return Promise.reject();
-            } else {
-                req.user = user;
-            }
-        });
+        return User.findOne({ email })
+            .then((user) => {
+                if (!user) {
+                    return Promise.reject();
+                } else {
+                    req.user = user;
+                }
+            })
+            .catch((err) => {
+                res.redirect("/500");
+            });
     });
 
 /**
  * Checks if the reset password token is valid. If the token is valid, the user with the valid token is found under: `req.user`,
  * otherwise you can get errors using `validationResult(req)`
- */    
+ */
 exports.validResetToken = param("resetToken").custom((resetToken, { req }) => {
     return User.findOne({
         resetToken,
         resetTokenExpiration: { $gt: Date.now() },
-    }).then((user) => {
-        if (!user) {
-            return Promise.reject();
-        } else {
-            req.user = user;
-        }
-    });
+    })
+        .then((user) => {
+            if (!user) {
+                return Promise.reject();
+            } else {
+                req.user = user;
+            }
+        })
+        .catch((err) => {
+            res.redirect("/500");
+        });
 });

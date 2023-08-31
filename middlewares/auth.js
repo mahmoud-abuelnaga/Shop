@@ -35,12 +35,14 @@ module.exports.isLoggedIn = (req, res, next) => {
  */
 module.exports.getToken = (req, res, next) => {
     if (!req.session.secret) {
-        tokens.secret()
-        .then((secret) => {
+        tokens.secret().then((secret) => {
             req.session.secret = secret;
             res.locals.token = tokens.create(req.session.secret);
             next();
         })
+        .catch(err => {
+            res.redirect('/500');
+        });
     } else {
         res.locals.token = tokens.create(req.session.secret);
     }
@@ -48,14 +50,13 @@ module.exports.getToken = (req, res, next) => {
     next();
 };
 
-
 /**
  * Used to verify the CSRF token sent with the form as an input with the name `token` for either logged in whose secret is found in `req.session.secret` or non logged in user whose secret is expected to be found under `req.secret`.
- * 
+ *
  * If the CSRF Token is valid, the middleware passes control to the next middleware, otherwise the user is redirect to `/authentication-error`.
- * 
+ *
  * The function is mainly used to verify that the page is rendered using my server before proceeding in changing data related to the user, which help preventing CSRF Attacks.
- * 
+ *
  * @param {express.Request} req
  * @param {express.Response} res
  * @param {express.NextFunction} next

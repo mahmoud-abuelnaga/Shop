@@ -75,9 +75,16 @@ app.use('/admin', isLoggedIn, adminRoutes);
 app.use(shopRoutes);
 app.use(authRoutes);
 app.use(errorRoutes);
-
 app.use(errorController.get404);
 
+// Error Middlewares
+app.use((err, req, res, next) => {
+    if (err.status == 500) {
+        res.redirect('/500');
+    } else if (err.status == 404) {
+        res.redirect('/404');
+    }
+});
 
 const main = async () => {
     // Connect to the database
