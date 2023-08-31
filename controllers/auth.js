@@ -3,10 +3,10 @@ const User = require("../models/user");
 
 // Core Modules
 
-
 // NPM Packages
 const bcrypt = require("bcryptjs");
 const Tokens = require("csrf");
+const { validationResult } = require("express-validator");
 
 // Constants
 const SALT = 4;
@@ -17,53 +17,36 @@ const tokens = new Tokens(); // Used to CSRF Tokens generation
 // Controller
 
 module.exports.getLogin = (req, res, next) => {
-    const errorMessage = req.flash("error")[0];
     res.render("auth/login", {
         path: "/login",
         pageTitle: "Login",
         userExists: req.query.notice,
-        errorMessage,
+        errorMessage: null,
+        oldInput: {},
+        errors: {},
     });
 };
 
 module.exports.postLogin = (req, res, next) => {
-    const email = req.body.email;
-    const password = req.body.password;
-    let user;
+    const result = validationResult(req);
 
-    User.findOne({ email })
-        .then((usr) => {
-            if (usr) {
-                user = usr;
-                return bcrypt.compare(password, user.password);
-            } else {
-                req.flash("error", "Invalid Email or Password");
-                res.redirect("/login");
-            }
-        })
-        .then((matched) => {
-            if (matched) {
-                req.session.loggedIn = true;
-                req.session.userId = user._id;
-                return tokens.secret();
-            } else {
-                try {
-                    req.flash("error", "Invalid Email or Password");
-                    res.redirect("/login");
-                } catch (err) {
-                    // Nothing
-                }
-            }
-        })
-        .then((secret) => {
-            if (secret) {
-                req.session.secret = secret;
-                res.redirect("/");
-            }
-        })
-        .catch((err) => {
-            console.log(err);
+    if (result.isEmpty()) {
+        req.session.loggedIn = true;
+        req.session.userId = req.user._id;
+        res.redirect("/");
+    } else {
+        const errorMessage = result.mapped().email.msg;
+        res.status(422).render("auth/login", {
+            path: "/login",
+            pageTitle: "Login",
+            userExists: req.query.notice,
+            oldInput: {
+                email: req.body.email,
+                password: req.body.password,
+            },
+            errorMessage: errorMessage,
         });
+    }
 };
 
 module.exports.logout = (req, res, next) => {
@@ -73,40 +56,47 @@ module.exports.logout = (req, res, next) => {
 };
 
 module.exports.getSignup = (req, res, next) => {
-    const errorMessage = req.flash("error")[0];
     res.render("auth/signup", {
         path: "/signup",
         pageTitle: "Signup",
-        errorMessage,
+        errorMessage: null,
+        oldInput: {},
+        errors: {},
     });
 };
 
 module.exports.postSignup = (req, res, next) => {
+    const result = validationResult(req);
     const name = req.body.name;
     const email = req.body.email;
     const password = req.body.password;
     const confirmPassword = req.body.confirmPassword;
 
-    User.findOne({ email })
-        .then((user) => {
-            // console.log(user);
-            if (user) {
-                req.flash("error", "This user already exists");
-                res.redirect("/signup");
-            } else {
-                return User.create({ name, email, password });
-            }
-        })
-        .then((user) => {
-            if (user) {
-                console.log("New User was created");
-                res.redirect("/login");
-            }
-        })
-        .catch(err => {
-            console.log(err);
-            res.redirect('/signup');
+    if (result.isEmpty()) {
+        User.create({ name, email, password })
+            .then((user) => {
+                if (user) {
+                    console.log("New User was created");
+                    res.redirect("/login");
+                }
+            })
+            .catch((err) => {
+                res.redirect('/500');
+            });
+    } else {
+        const errors = result.mapped();
+        res.status(422).render("auth/signup", {
+            path: "/signup",
+            pageTitle: "Signup",
+            oldInput: {
+                name,
+                email,
+                password,
+                confirmPassword,
+            },
+            errors,
         });
+    }
 };
 
 exports.getResetPass = (req, res, next) => {
@@ -116,8 +106,23 @@ exports.getResetPass = (req, res, next) => {
             pageTitle: "Email Sent",
         });
     } else {
-        const errorMessage = req.flash("error")[0];
         res.render("auth/resetPass", {
+            path: "/reset-pass",
+            pageTitle: "Reset Password",
+            errorMessage: null,
+        });
+    }
+};
+
+exports.postResetPass = (req, res, next) => {
+    const errors = validationResult(req).array();
+
+    if (errors.length == 0) {
+        req.user.sendResetPassEmail();
+        res.redirect("reset-pass?emailSent=true");
+    } else {
+        const errorMessage = errors[0].msg;
+        res.status(422).render("auth/resetPass", {
             path: "/reset-pass",
             pageTitle: "Reset Password",
             errorMessage,
@@ -125,70 +130,66 @@ exports.getResetPass = (req, res, next) => {
     }
 };
 
-exports.postResetPass = (req, res, next) => {
-    const email = req.body.email;
-    User.findOne({ email }).then((user) => {
-        if (user) {
-            user.sendResetPassEmail();
-            res.redirect("reset-pass?emailSent=true");
-        } else {
-            req.flash("error", "This email doesn't exist");
-            res.redirect("/reset-pass");
-        }
-    });
-};
-
 exports.getEditPass = (req, res, next) => {
     const resetToken = req.params.resetToken;
 
     const renderResetPass = () => {
-        const errorMessage = req.flash('error')[0];
         res.render("auth/resettingPass", {
             path: "/reset-pass",
             pageTitle: "Resetting Password",
             resetToken,
-            errorMessage,
+            errorMessage: null,
+        });
+    };
+
+    const errors = validationResult(req);
+    if (errors.isEmpty()) {
+        renderResetPass();
+    } else {
+        res.status(403).render("messages/tokenExpire", {
+            path: "/reset-pass",
+            pageTitle: "Token Expired",
         });
     }
-
-    User.findOne({resetToken, resetTokenExpiration: {$gt: Date.now()}})
-    .then(user => {
-        if (user) {
-            renderResetPass();
-        } else {
-            res.render('messages/tokenExpire', {
-                path: '/reset-pass',
-                pageTitle: 'Token Expired',
-            });
-        }
-    })
 };
 
 // Check if you check for the password in signup
-exports.postEditPass= (req, res, next) => {
+exports.postEditPass = (req, res, next) => {
     const resetToken = req.params.resetToken;
-    const password = req.body.pass;
-    const confirmPass = req.body.confirmPass;
+    const password = req.body.password;
+    const confirmPass = req.body.confirmPassword;
+    const errors = validationResult(req).array();
 
-    User.findOne({resetToken})
-    .then(user => {
-        if (user) {
-            if (password != confirmPass) {
-                req.flash('error', "The confirmed password doesn't match the password");
-                res.redirect(`/edit-pass/${resetToken}`);
-            } else {
-                user.password = password;
-                user.resetToken = null;
-                user.resetTokenExpiration = null;
-                user.save();
-                res.redirect('/login');
-            }
-        } else {
-            res.render('messages/tokenExpire', {
-                path: '/reset-pass',
-                pageTitle: 'Token Expired',
+    const renderResetPass = () => {
+        const errorMessage = errors[0].msg;
+        res.status(422).render("auth/resettingPass", {
+            path: "/reset-pass",
+            pageTitle: "Resetting Password",
+            resetToken,
+            errorMessage: errorMessage,
+        });
+    };
+
+    if (errors.length == 0) {
+        req.user.password = password;
+        req.user.resetToken = null;
+        req.user.resetTokenExpiration = null;
+        req.user.save()
+        .then(result => {
+            res.redirect("/login");
+        })
+        .catch(err => {
+            res.redirect('/500');
+        });
+    } else {
+        const error = errors[0];
+        if (error.path == 'resetToken') {
+            res.status(401).render("messages/tokenExpire", {
+                path: "/reset-pass",
+                pageTitle: "Token Expired",
             });
+        } else {
+            renderResetPass();
         }
-    });
-    
-}
+    }
+};
