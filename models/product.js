@@ -14,7 +14,7 @@ const ProductSchema = new mongoose.Schema({
     description: {
         type: String,
     },
-    imageUrl: String,
+    imagePath: String,
     sellerId: {
         type: mongoose.ObjectId,
         ref: 'User',

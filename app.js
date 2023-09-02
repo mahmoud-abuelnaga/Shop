@@ -3,7 +3,6 @@ const express = require('express');
 const session = require('express-session');
 const mongoose = require('mongoose');
 const MongoStore = require('connect-mongo');
-const flash = require('connect-flash');
 
 // Core Modules
 const path = require('path');
@@ -35,7 +34,7 @@ app.set('view engine', 'ejs');
 app.set('views', 'views');
 
 // Middlewares
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({extended: false}));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(session({
     secret: 'mysecret',
@@ -45,8 +44,6 @@ app.use(session({
         mongoUrl: URI,
     }),
 }));
-
-app.use(flash());   // You need to define the flash middleware after the session middleware as the flash messages are stored in the sessions database
 
 app.use((req, res, next) => {
     res.locals.loggedIn =  req.session.loggedIn;
