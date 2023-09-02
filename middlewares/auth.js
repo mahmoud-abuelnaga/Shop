@@ -34,7 +34,7 @@ module.exports.isLoggedIn = (req, res, next) => {
  * @param {express.NextFunction} next
  */
 module.exports.getToken = (req, res, next) => {
-    if (!req.session.secret) {
+        if (!req.session.secret) {
         tokens
             .secret()
             .then((secret) => {

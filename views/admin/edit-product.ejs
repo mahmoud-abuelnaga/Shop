@@ -7,7 +7,7 @@
     <%- include('../includes/navigation.ejs') %>
 
     <main>
-        <form class="product-form" action="<%= path %>" method="POST">
+        <form class="product-form" action="<%= path %>" method="POST" enctype="multipart/form-data">
             <% for (error in errors) { %>
                 <p class="error-message"><%= errors[error].msg %></p>
             <% } %>
@@ -16,8 +16,8 @@
                 <input type="text" name="title" id="title" value="<% if (path == '/admin/add-product') {%><%= oldInput.title %><%} else {%><%= product.title %><%} %>">
             </div>
             <div class="form-control">
-                <label for="image">Image`</label>
-                <input type="file" name="image" id="image" value="<% if (path == '/admin/add-product') {%><%= oldInput.image %><%} else {%><%= product.image %><%} %>">
+                <label for="image">Image</label>
+                <input type="file" name="image" id="image">
             </div>
             <div class="form-control">
                 <label for="price">Price</label>

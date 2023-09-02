@@ -4,13 +4,10 @@ const User = require("../models/user");
 // Core Modules
 
 // NPM Packages
-const bcrypt = require("bcryptjs");
-const Tokens = require("csrf");
 const { validationResult } = require("express-validator");
 
 // Constants
-const SALT = 4;
-const tokens = new Tokens(); // Used to CSRF Tokens generation
+
 
 // Utilites
 
