@@ -18,6 +18,7 @@
                             <li class="orders__products-item"><%= product.title %> (<%= product.quantity %>) ($<%= product.quantity * product.price %>)</li>
                         <% } %>
                     </ul>
+                    <span><a href="invoice/<%= order._id %>">Invoice</a></span>
                 </li>
             <% } %>
         </ul>

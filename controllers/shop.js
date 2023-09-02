@@ -1,5 +1,9 @@
 // Models
 const { Product } = require("../models/product");
+const Order = require("../models/order");
+
+// Packages
+const PDFDocument = require("pdfkit");
 
 // Controllers
 const errorControllers = require("./error");
@@ -80,7 +84,7 @@ exports.updateCart = (req, res, next) => {
             res.redirect("/cart");
         })
         .catch((err) => {
-            res.redirect('/500');
+            res.redirect("/500");
         });
 };
 
@@ -95,7 +99,7 @@ exports.getOrders = (req, res, next) => {
             });
         })
         .catch((err) => {
-            res.redirect('/500');
+            res.redirect("/500");
         });
 };
 
@@ -107,7 +111,7 @@ exports.createOrder = (req, res, next) => {
             res.redirect("/orders");
         })
         .catch((err) => {
-            res.redirect('/500');
+            res.redirect("/500");
         });
 };
 
@@ -116,4 +120,34 @@ exports.getCheckout = (req, res, next) => {
         path: "/checkout",
         pageTitle: "Checkout",
     });
+};
+
+exports.getInvoice = (req, res, next) => {
+    const orderId = req.params.orderId;
+    Order.findOne({ _id: orderId, userId: req.user._id })
+        .then((order) => {
+            if (order) {
+                const doc = new PDFDocument();
+                doc.pipe(res); // Pipe what is written in document to the response
+
+                doc.fontSize(20).text(`Order #${orderId}`);
+                doc.moveDown();
+                doc.fontSize(17).text("Products:");
+                for (const product of order.products) {
+                    doc.fontSize(14).text(
+                        `${product.title} (${product.quantity} x $${product.price})`
+                    );
+                }
+                doc.moveDown();
+                doc.fontSize(17).text(`Total Price: $${order.totalPrice}`);
+
+                doc.end();
+            } else {
+                res.redirect("/404");
+            }
+        })
+        .catch((err) => {
+            console.log(err);
+            res.redirect("/500");
+        });
 };
