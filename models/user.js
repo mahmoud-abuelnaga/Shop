@@ -13,6 +13,7 @@ const { Product } = require("./product");
 // Constants
 const SALT = 4;
 const tokens = new Tokens();
+const { productsPerPage } = require("../util/globalVars");
 
 // Helpers
 const hashPassword = (value) => {
@@ -116,7 +117,7 @@ const UserSchema = new mongoose.Schema(
             async sendResetPassEmail() {
                 const secret = await tokens.secret();
                 let resetToken = await bcrypt.hash(secret, SALT);
-                resetToken = resetToken.replace('/', 'x');
+                resetToken = resetToken.replace("/", "x");
                 this.resetToken = resetToken;
                 this.resetTokenExpiration = Date.now() + 30 * 60 * 1000; // Token expire after 30 min
                 this.save();
@@ -130,11 +131,21 @@ const UserSchema = new mongoose.Schema(
                 );
             },
 
-            async getOwnedProducts() {
-                const ownedProducts = await Product.find({
-                    sellerId: this._id,
-                });
+            async getOwnedProducts(page) {
+                const ownedProducts = await Product.find({sellerId: this._id, })
+                    .skip((page - 1) * productsPerPage)
+                    .limit(productsPerPage);
                 return ownedProducts;
+            },
+
+            async getAllProducts() {
+                const ownedProducts = await Product.find({sellerId: this._id, });
+                return ownedProducts;
+            },
+
+            async countOwnedProducts() {
+                const productsNo = await Product.count({sellerId: this._id});
+                return productsNo;
             },
 
             async validPassword(password) {

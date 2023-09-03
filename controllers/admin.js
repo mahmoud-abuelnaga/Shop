@@ -36,6 +36,7 @@ const renderEditProduct = (res, product, errors = {}, oldInput = {}) => {
 };
 
 // Constants
+const { productsPerPage } = require("../util/globalVars");
 
 /**
  * Renders a form to add a product to the database on this route: '/admin/add-product'
@@ -125,15 +126,26 @@ exports.postAddProduct = (req, res, next) => {
  * @param {express.NextFunction} next
  */
 exports.getProducts = (req, res, next) => {
+    const page = +req.query.page || 1;
+
     req.user
-        .getOwnedProducts()
-        .then((products) => {
-            res.render("admin/products", {
-                path: "/admin/products",
-                pageTitle: "Admin Products",
-                prods: products,
-                userId: req.user._id,
-            });
+        .countOwnedProducts()
+        .then((noOfProducts) => {
+            const lastPage = Math.ceil(noOfProducts / productsPerPage);
+            if (page < 1 || page > lastPage) {
+                errorControllers.get404(req, res, next);
+            } else {
+                req.user.getOwnedProducts(page).then((products) => {
+                    res.render("admin/products", {
+                        path: "/admin/products",
+                        pageTitle: "Admin Products",
+                        prods: products,
+                        userId: req.user._id,
+                        currentPage: page,
+                        lastPage,
+                    });
+                });
+            }
         })
         .catch((err) => {
             res.redirect("/500");
