@@ -8,14 +8,31 @@ const PDFDocument = require("pdfkit");
 // Controllers
 const errorControllers = require("./error");
 
+// Constants
+const { productsPerPage } = require("../util/globalVars");
+
 exports.getProducts = (req, res, next) => {
-    Product.find()
-        .then((products) => {
-            res.render("shop/product-list", {
-                prods: products,
-                pageTitle: "All Products",
-                path: "/products",
-            });
+    const page = +req.query.page || 1;
+
+    Product.count()
+        .then((noOfProducts) => {
+            const lastPage = Math.ceil(noOfProducts / productsPerPage);
+            if (page < 1 || page > lastPage) {
+                errorControllers.get404(req, res, next);
+            } else {
+                Product.find()
+                    .skip((page - 1) * productsPerPage)
+                    .limit(productsPerPage)
+                    .then((products) => {
+                        res.render("shop/product-list", {
+                            prods: products,
+                            pageTitle: "All Products",
+                            path: "/products",
+                            currentPage: page,
+                            lastPage,
+                        });
+                    });
+            }
         })
         .catch((err) => {
             res.redirect("/500");
@@ -23,13 +40,27 @@ exports.getProducts = (req, res, next) => {
 };
 
 exports.getIndex = (req, res, next) => {
-    Product.find()
-        .then((products) => {
-            res.render("shop/index", {
-                prods: products,
-                pageTitle: "Shop",
-                path: "/",
-            });
+    const page = +req.query.page || 1;
+
+    Product.count()
+        .then((noOfProducts) => {
+            const lastPage = Math.ceil(noOfProducts / productsPerPage);
+            if (page < 1 || page > lastPage) {
+                errorControllers.get404(req, res, next);
+            } else {
+                Product.find()
+                    .skip((page - 1) * productsPerPage)
+                    .limit(productsPerPage)
+                    .then((products) => {
+                        res.render("shop/index", {
+                            prods: products,
+                            pageTitle: "Shop",
+                            path: "/",
+                            currentPage: page,
+                            lastPage,
+                        });
+                    });
+            }
         })
         .catch((err) => {
             res.redirect("/500");
