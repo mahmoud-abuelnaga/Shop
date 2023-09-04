@@ -64,8 +64,12 @@ module.exports.getToken = (req, res, next) => {
  */
 module.exports.verifyToken = (req, res, next) => {
     const secret = req.session.secret;
+    let token = req.body.token;
+    if (!token) {
+        token = req.headers.token;
+    }
 
-    const verified = tokens.verify(secret, req.body.token);
+    const verified = tokens.verify(secret, token);
     if (verified) {
         next();
     } else {

@@ -58,7 +58,7 @@ exports.getAddProduct = (req, res, next) => {
  * @param {express.Response} res
  * @param {express.NextFunction} next
  */
-exports.postAddProduct = (req, res, next) => {
+exports.postAddProduct = async (req, res, next) => {
     const title = req.body.title;
     const image = req.file;
     const price = req.body.price;
@@ -67,39 +67,27 @@ exports.postAddProduct = (req, res, next) => {
 
     if (result.isEmpty() && image) {
         // Create a new product & save it to the database
-        const product = new Product({
+        let product = new Product({
             title,
             price,
             description,
             sellerId: req.user._id,
         });
-        product
-            .save()
-            .then((product) => {
-                const imageType = image.mimetype.split("/")[1];
-                const imageName = product._id.toString() + "." + imageType;
-                const fullImagePath = path.join(
-                    rootDir,
-                    "public",
-                    "images",
-                    imageName
-                );
-                product.imagePath = path.join("images", imageName);
-                product
-                    .save()
-                    .then((product) => {
-                        return fs.rename(image.path, fullImagePath);
-                    })
-                    .then((result) => {
-                        res.redirect("/admin/products");
-                    })
-                    .catch((err) => {
-                        res.redirect("/500");
-                    });
-            })
-            .catch((err) => {
-                res.redirect("/500");
-            });
+
+        product = await product.save();
+        const imageType = image.mimetype.split("/")[1];
+        const imageName = product._id.toString() + "." + imageType;
+        const fullImagePath = path.join(
+            rootDir,
+            "public",
+            "images",
+            imageName
+        );
+        product.imagePath = path.join("images", imageName);
+        await product.save();
+        await fs.rename(image.path, fullImagePath);
+        res.redirect("/admin/products");
+        
     } else {
         const errors = result.mapped();
         if (!image) {
@@ -132,7 +120,7 @@ exports.getProducts = (req, res, next) => {
         .countOwnedProducts()
         .then((noOfProducts) => {
             const lastPage = Math.ceil(noOfProducts / productsPerPage);
-            if (page < 1 || page > lastPage) {
+            if (page < 1 || (page > lastPage && lastPage != 0)) {
                 errorControllers.get404(req, res, next);
             } else {
                 req.user.getOwnedProducts(page).then((products) => {
@@ -228,21 +216,42 @@ exports.postEditProduct = (req, res, next) => {
  * @param {express.Response} res
  * @param {express.NextFunction} next
  */
-exports.deleteProduct = (req, res, next) => {
-    Product.findOneAndDelete({ _id: req.params.id, sellerId: req.user._id })
-        .then((product) => {
-            const fullImagePath = path.join(
-                rootDir,
-                "public",
-                product.imagePath
-            );
-            fs.unlink(fullImagePath);
-            return Product.removeFromCarts(req.params.id);
-        })
-        .then((result) => {
-            res.redirect("/admin/products");
-        })
-        .catch((err) => {
-            res.redirect("/500");
+exports.deleteProduct = async (req, res, next) => {
+    let product;
+    try {
+        product = await Product.findOneAndDelete({
+            _id: req.params.id,
+            sellerId: req.user._id,
         });
+    } catch (err) {
+        return res.status(500).json({
+            message: "Sever-Side Error",
+        });
+    }
+
+    if (product) {
+        const fullImagePath = path.join(rootDir, "public", product.imagePath);
+        try {
+            await fs.unlink(fullImagePath);
+        } catch (err) {
+            console.log(err);
+        }
+
+        try {           
+            await Product.removeFromCarts(req.params.id);
+        } catch (err) {
+            console.log(err);
+            return res.status(500).json({
+                message: "Sever-Side Error",
+            });
+        }
+
+        return res.status(200).json({
+            message: "Success!",
+        });
+    } else {
+        return res.status(403).json({
+            message: "Not Authorized",
+        });
+    }
 };
