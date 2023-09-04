@@ -17,7 +17,7 @@ exports.getProducts = (req, res, next) => {
     Product.count()
         .then((noOfProducts) => {
             const lastPage = Math.ceil(noOfProducts / productsPerPage);
-            if (page < 1 || page > lastPage) {
+            if (page < 1 || (page > lastPage && lastPage != 0)) {
                 errorControllers.get404(req, res, next);
             } else {
                 Product.find()
@@ -45,7 +45,7 @@ exports.getIndex = (req, res, next) => {
     Product.count()
         .then((noOfProducts) => {
             const lastPage = Math.ceil(noOfProducts / productsPerPage);
-            if (page < 1 || page > lastPage) {
+            if (page < 1 || (page > lastPage && lastPage != 0)) {
                 errorControllers.get404(req, res, next);
             } else {
                 Product.find()

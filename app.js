@@ -75,9 +75,9 @@ app.use(errorRoutes);
 app.use(errorController.get404);
 
 // Error Middleware
-// app.use((error, req, res, next) => {
-//     res.redirect('/500');
-// });
+app.use((error, req, res, next) => {
+    res.redirect('/500');
+});
 
 const main = async () => {
     // Connect to the database

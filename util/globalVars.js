@@ -1,1 +1,1 @@
-exports.productsPerPage = 3;
+exports.productsPerPage = 1;

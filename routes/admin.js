@@ -3,14 +3,10 @@ const multer = require("multer");
 const express = require("express");
 
 // Constants
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, "public/images");
-    },
-});
+
 
 const upload = multer({
-    storage,
+    dest: "public/images",
     fileFilter: (req, file, cb) => {
         if (
             file.mimetype == "image/jpeg" ||
@@ -33,8 +29,10 @@ const adminController = require("../controllers/admin");
 // Validation
 const { validProduct } = require("../validators/product");
 
-// /admin/products => GET
-router.get("/products", adminController.getProducts);
+router.route("/products")
+.get(adminController.getProducts)
+
+router.delete("/products/:id", verifyToken, adminController.deleteProduct);
 
 // /admin/add-product => GET
 router.get("/add-product", adminController.getAddProduct);
@@ -60,7 +58,6 @@ router.post(
     adminController.postEditProduct
 );
 
-// /admin/delet-product => POST
-router.post("/delete-product/:id", verifyToken, adminController.deleteProduct);
+
 
 module.exports = router;
