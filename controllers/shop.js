@@ -11,34 +11,6 @@ const errorControllers = require("./error");
 // Constants
 const { productsPerPage } = require("../util/globalVars");
 
-exports.getProducts = (req, res, next) => {
-    const page = +req.query.page || 1;
-
-    Product.count()
-        .then((noOfProducts) => {
-            const lastPage = Math.ceil(noOfProducts / productsPerPage);
-            if (page < 1 || (page > lastPage && lastPage != 0)) {
-                errorControllers.get404(req, res, next);
-            } else {
-                Product.find()
-                    .skip((page - 1) * productsPerPage)
-                    .limit(productsPerPage)
-                    .then((products) => {
-                        res.render("shop/product-list", {
-                            prods: products,
-                            pageTitle: "All Products",
-                            path: "/products",
-                            currentPage: page,
-                            lastPage,
-                        });
-                    });
-            }
-        })
-        .catch((err) => {
-            res.redirect("/500");
-        });
-};
-
 exports.getIndex = (req, res, next) => {
     const page = +req.query.page || 1;
 
@@ -56,6 +28,34 @@ exports.getIndex = (req, res, next) => {
                             prods: products,
                             pageTitle: "Shop",
                             path: "/",
+                            currentPage: page,
+                            lastPage,
+                        });
+                    });
+            }
+        })
+        .catch((err) => {
+            res.redirect("/500");
+        });
+};
+
+exports.getProducts = (req, res, next) => {
+    const page = +req.query.page || 1;
+
+    Product.count()
+        .then((noOfProducts) => {
+            const lastPage = Math.ceil(noOfProducts / productsPerPage);
+            if (page < 1 || (page > lastPage && lastPage != 0)) {
+                errorControllers.get404(req, res, next);
+            } else {
+                Product.find()
+                    .skip((page - 1) * productsPerPage)
+                    .limit(productsPerPage)
+                    .then((products) => {
+                        res.render("shop/product-list", {
+                            prods: products,
+                            pageTitle: "All Products",
+                            path: "/products",
                             currentPage: page,
                             lastPage,
                         });
@@ -85,38 +85,64 @@ exports.getProductDetails = (req, res, next) => {
         });
 };
 
-exports.getCart = (req, res, next) => {
-    req.user
-        .getCart()
-        .then(({ products }) => {
-            res.render("shop/cart", {
-                products,
-                pageTitle: "Your Cart",
-                path: "/cart",
-            });
-        })
-        .catch((err) => {
-            res.redirect("/500");
-        });
-};
-
-exports.updateCart = (req, res, next) => {
+exports.updateCart = async (req, res, next) => {
     const action = req.query.action;
-    let promise;
-    if (action == "add") {
-        promise = req.user.addToCart(req.body.id);
-    } else if (action == "delete") {
-        promise = req.user.removeFromCart(req.body.id);
+    try {
+        if (action == "add") {
+            await req.user.addToCart(req.body.id);
+        } else if (action == "delete") {
+            await req.user.removeFromCart(req.body.id);
+        }
+    } catch (err) {
+        console.log(err);
+        return res.redirect("/500");
     }
 
-    promise
-        .then((result) => {
-            // console.log(result);
-            res.redirect("/cart");
-        })
-        .catch((err) => {
-            res.redirect("/500");
-        });
+    return res.redirect("/cart");
+};
+
+exports.getCart = async (req, res, next) => {
+    let products, totalPrice;
+    try {
+        ({ products, totalPrice } = await req.user.getCart());
+    } catch (err) {
+        console.log(err);
+        return res.redirect("/500");
+    }
+
+    return res.render("shop/cart", {
+        products,
+        pageTitle: "Your Cart",
+        path: "/cart",
+        totalPrice,
+    });
+};
+
+exports.getCheckout = async (req, res, next) => {
+    let products, totalPrice;
+    try {
+        ({ products, totalPrice } = await req.user.getCart());
+    } catch (err) {
+        console.log(err);
+        res.redirect("/500");
+    }
+
+    res.render("shop/checkout", {
+        path: "/checkout",
+        pageTitle: "Checkout",
+        products,
+        totalPrice,
+    });
+};
+
+exports.createOrder = async (req, res, next) => {
+    try {
+        const result = await req.user.createOrder();
+        console.log(result);
+        res.redirect("/orders");
+    } catch (err) {
+        console.log(err);
+    }
 };
 
 exports.getOrders = (req, res, next) => {
@@ -132,25 +158,6 @@ exports.getOrders = (req, res, next) => {
         .catch((err) => {
             res.redirect("/500");
         });
-};
-
-exports.createOrder = (req, res, next) => {
-    req.user
-        .createOrder()
-        .then((result) => {
-            console.log(result);
-            res.redirect("/orders");
-        })
-        .catch((err) => {
-            res.redirect("/500");
-        });
-};
-
-exports.getCheckout = (req, res, next) => {
-    res.render("shop/checkout", {
-        path: "/checkout",
-        pageTitle: "Checkout",
-    });
 };
 
 exports.getInvoice = (req, res, next) => {

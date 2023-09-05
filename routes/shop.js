@@ -23,14 +23,14 @@ router.post("/cart", isLoggedIn, verifyToken, shopController.updateCart);
 
 router.get("/orders", isLoggedIn, shopController.getOrders);
 
+router.get("/checkout", isLoggedIn, shopController.getCheckout);
+
 router.post(
     "/create-order",
     isLoggedIn,
     verifyToken,
     shopController.createOrder
 );
-
-router.get("/checkout", isLoggedIn, shopController.getCheckout);
 
 router.get("/invoice/:orderId", isLoggedIn, shopController.getInvoice);
 

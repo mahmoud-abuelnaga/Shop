@@ -35,7 +35,9 @@ app.set('views', 'views');
 
 // Middlewares
 app.use(express.urlencoded({extended: false}));
+app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+
 app.use(session({
     secret: 'mysecret',
     resave: false,  // Only resave the session when there is a change in the session information. If set to true, the session is save with every request from the user
@@ -75,8 +77,8 @@ app.use(errorRoutes);
 app.use(errorController.get404);
 
 // Error Middleware
-app.use((error, req, res, next) => {
-    res.redirect('/500');
+app.use((err, req, res, next) => {
+    console.log(err)
 });
 
 const main = async () => {

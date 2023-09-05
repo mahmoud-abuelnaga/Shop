@@ -17,10 +17,10 @@
             </ul>
             <hr>
             <div class="centered">
-                <form action="/create-order" method="post">
-                    <button  type="submit" class="btn">Place an Order</button>
-                    <input type="hidden" name="token" value="<%= token %>">
-                </form>
+                <h2>Total Price: <%= totalPrice %></h2>
+            </div>
+            <div class="centered">
+                <a href="/checkout" class="btn">Checkout</a>
             </div>
         <% } else { %>
             <h1>No Products in Cart</h1>
