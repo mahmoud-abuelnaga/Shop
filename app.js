@@ -3,13 +3,17 @@ const express = require('express');
 const session = require('express-session');
 const mongoose = require('mongoose');
 const MongoStore = require('connect-mongo');
+const helmet = require("helmet");
+const compression = require('express-compression');
+const morgan = require("morgan");
 
-// Core Modules
 const path = require('path');
+const fs = require("fs");
 
 // Constants
 const DATABASE = 'shop' 
-const URI = `mongodb+srv://mahmoud:${process.env.mongoDB_shop_pass}@cluster0.ffkdxbs.mongodb.net/${DATABASE}?retryWrites=true&w=majority`;
+const URI = `mongodb+srv://${process.env.MONGODB_USER}:${process.env.MONGODB_CLUSTER0_PASS}@cluster0.ffkdxbs.mongodb.net/${DATABASE}?retryWrites=true&w=majority`;
+const logStream = fs.createWriteStream(path.join(__dirname, "access.log"));
 
 // Controllers
 const errorController = require('./controllers/error');
@@ -34,6 +38,9 @@ app.set('view engine', 'ejs');
 app.set('views', 'views');
 
 // Middlewares
+app.use(helmet());  // set secure response headers
+app.use(compression()); // compress response assets (html, css, js), but not images
+app.use(morgan("combined", {stream: logStream}));  // log incoming requests
 app.use(express.urlencoded({extended: false}));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -88,7 +95,7 @@ const main = async () => {
     // console.log(result);
     
     console.log('....Listening to requests....')
-    app.listen(3000);   // Listen on port 3000
+    app.listen(process.env.PORT || 3000);   // Listen on port 3000
 }
 
 main()
